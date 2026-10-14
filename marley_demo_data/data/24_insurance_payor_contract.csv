@@ -1,0 +1,7 @@
+insurance_payor,company,start_date,end_date,posting_date,is_active,default_price_list
+Al Wadi Health Insurance,Marley Health Demo,2025-01-01,2025-12-31,2024-12-11,1,Al Wadi Tariff
+Al Wadi Health Insurance,Marley Health Demo,2026-01-01,2026-12-31,2025-12-11,1,Al Wadi Tariff
+Muscat Shield Assurance,Marley Health Demo,2025-04-01,2026-03-31,2025-03-11,1,
+Muscat Shield Assurance,Marley Health Demo,2026-04-01,2027-03-31,2026-03-11,1,
+Gulf Crescent TPA,Marley Health Demo,2025-07-01,2026-06-30,2025-06-10,1,
+Gulf Crescent TPA,Marley Health Demo,2026-07-01,2027-06-30,2026-06-10,1,

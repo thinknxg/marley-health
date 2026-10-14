@@ -1,0 +1,88 @@
+insurance_plan,eligibility_for,template_dt,template_dn,item_code,coverage,discount,mode_of_approval,valid_from,valid_till,is_active
+Al Wadi Gold,Item,,,MHD-CONS-GP,100,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Item,,,MHD-CONS-SPEC,90,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Service,Lab Test Template,Fasting Blood Sugar,,100,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Service,Lab Test Template,HbA1c,,100,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Service,Lab Test Template,Serum Creatinine,,100,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Service,Lab Test Template,TSH,,100,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Service,Lab Test Template,CRP,,100,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Service,Lab Test Template,Complete Blood Count,,100,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Service,Lab Test Template,Lipid Profile,,100,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Service,Lab Test Template,Urine Routine Examination,,100,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Service,Clinical Procedure Template,ECG 12-Lead,,90,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Service,Clinical Procedure Template,Nebulization,,90,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Service,Clinical Procedure Template,Wound Dressing,,90,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Service,Clinical Procedure Template,Intramuscular Injection,,90,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Service,Clinical Procedure Template,Ear Wax Removal,,90,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Service,Healthcare Service Unit Type,General Ward Bed,,100,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Item,,,MHD-DRG-MET500,80,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Item,,,MHD-DRG-AML5,80,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Item,,,MHD-DRG-LOS50,80,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Item,,,MHD-DRG-ATOR20,80,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Gold,Item,,,MHD-DRG-LEVO50,80,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Silver,Item,,,MHD-CONS-GP,80,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Silver,Item,,,MHD-CONS-SPEC,80,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Silver,Service,Lab Test Template,Fasting Blood Sugar,,80,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Silver,Service,Lab Test Template,HbA1c,,80,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Silver,Service,Lab Test Template,Serum Creatinine,,80,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Silver,Service,Lab Test Template,TSH,,80,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Silver,Service,Lab Test Template,CRP,,80,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Silver,Service,Lab Test Template,Complete Blood Count,,80,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Silver,Service,Lab Test Template,Lipid Profile,,80,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Silver,Service,Lab Test Template,Urine Routine Examination,,80,0,Automatic,2025-01-01,2026-12-31,1
+Al Wadi Silver,Service,Clinical Procedure Template,ECG 12-Lead,,80,0,Manual,2025-01-01,2026-12-31,1
+Al Wadi Silver,Service,Clinical Procedure Template,Nebulization,,80,0,Manual,2025-01-01,2026-12-31,1
+Al Wadi Silver,Service,Clinical Procedure Template,Wound Dressing,,80,0,Manual,2025-01-01,2026-12-31,1
+Al Wadi Silver,Service,Clinical Procedure Template,Intramuscular Injection,,80,0,Manual,2025-01-01,2026-12-31,1
+Al Wadi Silver,Service,Clinical Procedure Template,Ear Wax Removal,,80,0,Manual,2025-01-01,2026-12-31,1
+Muscat Shield Corporate,Item,,,MHD-CONS-GP,90,10,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Item,,,MHD-CONS-SPEC,90,10,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Service,Lab Test Template,Fasting Blood Sugar,,90,10,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Service,Lab Test Template,HbA1c,,90,10,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Service,Lab Test Template,Serum Creatinine,,90,10,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Service,Lab Test Template,TSH,,90,10,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Service,Lab Test Template,CRP,,90,10,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Service,Lab Test Template,Complete Blood Count,,90,10,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Service,Lab Test Template,Lipid Profile,,90,10,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Service,Lab Test Template,Urine Routine Examination,,90,10,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Service,Clinical Procedure Template,ECG 12-Lead,,90,10,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Service,Clinical Procedure Template,Nebulization,,90,10,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Service,Clinical Procedure Template,Wound Dressing,,90,10,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Service,Clinical Procedure Template,Intramuscular Injection,,90,10,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Service,Clinical Procedure Template,Ear Wax Removal,,90,10,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Service,Healthcare Service Unit Type,General Ward Bed,,90,0,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Item,,,MHD-DRG-MET500,75,0,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Item,,,MHD-DRG-AML5,75,0,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Item,,,MHD-DRG-LOS50,75,0,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Item,,,MHD-DRG-ATOR20,75,0,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Corporate,Item,,,MHD-DRG-LEVO50,75,0,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Essential,Item,,,MHD-CONS-GP,70,0,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Essential,Item,,,MHD-CONS-SPEC,70,0,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Essential,Service,Lab Test Template,Fasting Blood Sugar,,70,0,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Essential,Service,Lab Test Template,HbA1c,,70,0,Manual,2025-04-01,2027-03-31,1
+Muscat Shield Essential,Service,Lab Test Template,Serum Creatinine,,70,0,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Essential,Service,Lab Test Template,TSH,,70,0,Manual,2025-04-01,2027-03-31,1
+Muscat Shield Essential,Service,Lab Test Template,CRP,,70,0,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Essential,Service,Lab Test Template,Complete Blood Count,,70,0,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Essential,Service,Lab Test Template,Lipid Profile,,70,0,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Essential,Service,Lab Test Template,Urine Routine Examination,,70,0,Automatic,2025-04-01,2027-03-31,1
+Muscat Shield Essential,Service,Clinical Procedure Template,ECG 12-Lead,,70,0,Manual,2025-04-01,2027-03-31,1
+Muscat Shield Essential,Service,Clinical Procedure Template,Nebulization,,70,0,Manual,2025-04-01,2027-03-31,1
+Muscat Shield Essential,Service,Clinical Procedure Template,Wound Dressing,,70,0,Manual,2025-04-01,2027-03-31,1
+Muscat Shield Essential,Service,Clinical Procedure Template,Intramuscular Injection,,70,0,Manual,2025-04-01,2027-03-31,1
+Muscat Shield Essential,Service,Clinical Procedure Template,Ear Wax Removal,,70,0,Manual,2025-04-01,2027-03-31,1
+Gulf Crescent Standard,Item,,,MHD-CONS-GP,80,5,Automatic,2025-07-01,2027-06-30,1
+Gulf Crescent Standard,Item,,,MHD-CONS-SPEC,80,5,Automatic,2025-07-01,2027-06-30,1
+Gulf Crescent Standard,Service,Lab Test Template,Fasting Blood Sugar,,80,5,Automatic,2025-07-01,2027-06-30,1
+Gulf Crescent Standard,Service,Lab Test Template,HbA1c,,80,5,Automatic,2025-07-01,2027-06-30,1
+Gulf Crescent Standard,Service,Lab Test Template,Serum Creatinine,,80,5,Automatic,2025-07-01,2027-06-30,1
+Gulf Crescent Standard,Service,Lab Test Template,TSH,,80,5,Automatic,2025-07-01,2027-06-30,1
+Gulf Crescent Standard,Service,Lab Test Template,CRP,,80,5,Automatic,2025-07-01,2027-06-30,1
+Gulf Crescent Standard,Service,Lab Test Template,Complete Blood Count,,80,5,Automatic,2025-07-01,2027-06-30,1
+Gulf Crescent Standard,Service,Lab Test Template,Lipid Profile,,80,5,Automatic,2025-07-01,2027-06-30,1
+Gulf Crescent Standard,Service,Lab Test Template,Urine Routine Examination,,80,5,Automatic,2025-07-01,2027-06-30,1
+Gulf Crescent Standard,Service,Clinical Procedure Template,ECG 12-Lead,,80,5,Automatic,2025-07-01,2027-06-30,1
+Gulf Crescent Standard,Service,Clinical Procedure Template,Nebulization,,80,5,Automatic,2025-07-01,2027-06-30,1
+Gulf Crescent Standard,Service,Clinical Procedure Template,Wound Dressing,,80,5,Automatic,2025-07-01,2027-06-30,1
+Gulf Crescent Standard,Service,Clinical Procedure Template,Intramuscular Injection,,80,5,Automatic,2025-07-01,2027-06-30,1
+Gulf Crescent Standard,Service,Clinical Procedure Template,Ear Wax Removal,,80,5,Automatic,2025-07-01,2027-06-30,1

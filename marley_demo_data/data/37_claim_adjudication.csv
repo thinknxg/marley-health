@@ -1,0 +1,8 @@
+_claim_ref,_visit_ref,item_code,status,payment_error_reason
+CLM-0002,APT-0092,MHD-CONS-SPEC,Rejected,Prior authorisation not obtained before service
+CLM-0004,APT-0093,MHD-CONS-SPEC,Rejected,Duplicate claim for the same service date
+CLM-0006,APT-0130,MHD-CONS-SPEC,Rejected,Member not eligible on date of service (policy suspended for unpaid premium)
+CLM-0011,APT-0131,MHD-CONS-SPEC,Rejected,Annual benefit limit for this service exceeded
+CLM-0013,APT-0069,MHD-LAB-CBC,Rejected,Service not medically justified for the submitted diagnosis
+CLM-0041,APT-0121,MHD-CONS-GP,Rejected,Prior authorisation not obtained before service
+CLM-0042,APT-0075,MHD-CONS-SPEC,Rejected,Duplicate claim for the same service date

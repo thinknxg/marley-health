@@ -1,0 +1,53 @@
+_ref,patient,_policy_ref,insurance_payor,posting_date_based_on,from_date,to_date,posting_date,due_date,mode_of_payment,_target,_adjudication_date,_payment_date,_payment_reference
+CLM-0001,Aarav Pillai,MSA-26908572-02,Muscat Shield Assurance,Sales Invoice,2026-06-01,2026-06-30,2026-07-05,2026-08-19,Wire Transfer,Paid,2026-07-26,2026-08-15,MSA-REM-833719
+CLM-0002,Deepa Krishnan,MSA-26985518,Muscat Shield Assurance,Sales Invoice,2026-06-01,2026-06-30,2026-07-05,2026-08-19,Wire Transfer,Paid,2026-07-22,2026-08-19,MSA-REM-148815
+CLM-0003,Fahad Al Saadi,MSA-26562667-01,Muscat Shield Assurance,Sales Invoice,2026-06-01,2026-06-30,2026-07-05,2026-08-19,Wire Transfer,Paid,2026-07-20,2026-08-18,MSA-REM-849567
+CLM-0004,Imran Qureshi,MSA-26965402,Muscat Shield Assurance,Sales Invoice,2026-06-01,2026-06-30,2026-07-05,2026-08-19,Wire Transfer,Paid,2026-07-20,2026-08-19,MSA-REM-780051
+CLM-0005,James Whitfield,AWH-26850349,Al Wadi Health Insurance,Sales Invoice,2026-06-01,2026-06-30,2026-07-05,2026-08-04,Wire Transfer,Paid,2026-07-25,2026-08-03,AWH-REM-272774
+CLM-0006,Mira Santos,AWH-26151698-01,Al Wadi Health Insurance,Sales Invoice,2026-06-01,2026-06-30,2026-07-05,2026-08-04,Wire Transfer,Adjudicated,2026-07-16,,
+CLM-0007,Ravi Shankar,GCT-26913300,Gulf Crescent TPA,Sales Invoice,2026-06-01,2026-06-30,2026-07-05,2026-09-03,Wire Transfer,Paid,2026-07-26,2026-09-03,GCT-REM-435285
+CLM-0008,Sarah Collins,AWH-26701390,Al Wadi Health Insurance,Sales Invoice,2026-06-01,2026-06-30,2026-07-05,2026-08-04,Wire Transfer,Paid,2026-07-23,2026-08-02,AWH-REM-806132
+CLM-0009,Yousuf Al Shukaili,AWH-26460777,Al Wadi Health Insurance,Sales Invoice,2026-06-01,2026-06-30,2026-07-05,2026-08-04,Wire Transfer,Paid,2026-07-20,2026-08-04,AWH-REM-499241
+CLM-0010,Aarav Pillai,MSA-26908572-02,Muscat Shield Assurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-19,Wire Transfer,Paid,2026-08-16,2026-09-17,MSA-REM-288251
+CLM-0011,Adam Hassan,AWH-26425113-01,Al Wadi Health Insurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-04,Wire Transfer,Paid,2026-08-18,2026-08-31,AWH-REM-283338
+CLM-0012,Arjun Pillai,MSA-26908572,Muscat Shield Assurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-19,Wire Transfer,Paid,2026-08-24,2026-09-19,MSA-REM-432181
+CLM-0013,Ayesha Siddiqui,GCT-26131430-01,Gulf Crescent TPA,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-10-04,Wire Transfer,Paid,2026-08-22,2026-10-03,GCT-REM-470885
+CLM-0014,Aziza Al Hinai,MSA-26578743,Muscat Shield Assurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-19,Wire Transfer,Paid,2026-08-19,2026-09-17,MSA-REM-609531
+CLM-0015,Hilal Al Habsi,MSA-26972113,Muscat Shield Assurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-19,Wire Transfer,Paid,2026-08-23,2026-09-17,MSA-REM-411050
+CLM-0016,Imran Qureshi,MSA-26965402,Muscat Shield Assurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-19,Wire Transfer,Paid,2026-08-19,2026-09-19,MSA-REM-887957
+CLM-0017,Jana Al Riyami,MSA-26471370-01,Muscat Shield Assurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-19,Wire Transfer,Paid,2026-08-21,2026-09-16,MSA-REM-669132
+CLM-0018,Jose Santos,AWH-26151698,Al Wadi Health Insurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-04,Wire Transfer,Paid,2026-08-20,2026-09-01,AWH-REM-363234
+CLM-0019,Kareem Abdelaziz,MSA-26943490,Muscat Shield Assurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-19,Wire Transfer,Paid,2026-08-21,2026-09-17,MSA-REM-322708
+CLM-0020,Lakshmi Varma,MSA-26908572-01,Muscat Shield Assurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-19,Wire Transfer,Paid,2026-08-26,2026-09-17,MSA-REM-680908
+CLM-0021,Layla Haddad,AWH-26917358,Al Wadi Health Insurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-04,Wire Transfer,Paid,2026-08-22,2026-09-04,AWH-REM-605355
+CLM-0022,Maria Reyes,AWH-26669948,Al Wadi Health Insurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-04,Wire Transfer,Paid,2026-08-23,2026-09-04,AWH-REM-348606
+CLM-0023,Mohammed Iqbal,GCT-26131430,Gulf Crescent TPA,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-10-04,Wire Transfer,Paid,2026-08-16,2026-10-04,GCT-REM-236126
+CLM-0024,Muna Al Riyami,MSA-26471370,Muscat Shield Assurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-19,Wire Transfer,Paid,2026-08-25,2026-09-14,MSA-REM-789552
+CLM-0025,Nour Mahmoud,MSA-26334410,Muscat Shield Assurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-19,Wire Transfer,Paid,2026-08-21,2026-09-14,MSA-REM-638769
+CLM-0026,Omar Hassan,AWH-26425113,Al Wadi Health Insurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-04,Wire Transfer,Paid,2026-08-24,2026-08-30,AWH-REM-235664
+CLM-0027,Rahma Al Battashi,MSA-26618851,Muscat Shield Assurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-19,Wire Transfer,Paid,2026-08-21,2026-09-17,MSA-REM-356469
+CLM-0028,Ravi Shankar,GCT-26913300,Gulf Crescent TPA,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-10-04,Wire Transfer,Paid,2026-08-25,2026-10-02,GCT-REM-765988
+CLM-0029,Reem Al Hinai,MSA-26578743-01,Muscat Shield Assurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-19,Wire Transfer,Paid,2026-08-26,2026-09-19,MSA-REM-613734
+CLM-0030,Salma Al Balushi,AWH-26576308,Al Wadi Health Insurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-04,Wire Transfer,Paid,2026-08-22,2026-09-02,AWH-REM-952294
+CLM-0031,Shamsa Al Saadi,MSA-26562667,Muscat Shield Assurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-19,Wire Transfer,Paid,2026-08-25,2026-09-19,MSA-REM-759559
+CLM-0032,Talal Al Ghafri,GCT-26619773,Gulf Crescent TPA,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-10-04,Wire Transfer,Paid,2026-08-17,2026-09-30,GCT-REM-792561
+CLM-0033,Yousuf Al Shukaili,AWH-26460777,Al Wadi Health Insurance,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-09-04,Wire Transfer,Paid,2026-08-22,2026-09-04,AWH-REM-341396
+CLM-0034,Zainab Iqbal,GCT-26131430-02,Gulf Crescent TPA,Sales Invoice,2026-07-01,2026-07-31,2026-08-05,2026-10-04,Wire Transfer,Paid,2026-08-22,2026-09-30,GCT-REM-840992
+CLM-0035,Arjun Pillai,MSA-26908572,Muscat Shield Assurance,Sales Invoice,2026-08-01,2026-08-31,2026-09-05,2026-10-20,Wire Transfer,Adjudicated,2026-09-17,,
+CLM-0036,Ayesha Siddiqui,GCT-26131430-01,Gulf Crescent TPA,Sales Invoice,2026-08-01,2026-08-31,2026-09-05,2026-11-04,Wire Transfer,Adjudicated,2026-09-19,,
+CLM-0037,Aziza Al Hinai,MSA-26578743,Muscat Shield Assurance,Sales Invoice,2026-08-01,2026-08-31,2026-09-05,2026-10-20,Wire Transfer,Adjudicated,2026-09-20,,
+CLM-0038,Grace Mendoza,AWH-26905938,Al Wadi Health Insurance,Sales Invoice,2026-08-01,2026-08-31,2026-09-05,2026-10-05,Wire Transfer,Paid,2026-09-22,2026-10-05,AWH-REM-368277
+CLM-0039,Hilal Al Habsi,MSA-26972113,Muscat Shield Assurance,Sales Invoice,2026-08-01,2026-08-31,2026-09-05,2026-10-20,Wire Transfer,Adjudicated,2026-09-20,,
+CLM-0040,Huda Al Farsi,AWH-26385193,Al Wadi Health Insurance,Sales Invoice,2026-08-01,2026-08-31,2026-09-05,2026-10-05,Wire Transfer,Paid,2026-09-15,2026-10-05,AWH-REM-624607
+CLM-0041,Jana Al Riyami,MSA-26471370-01,Muscat Shield Assurance,Sales Invoice,2026-08-01,2026-08-31,2026-09-05,2026-10-20,Wire Transfer,Adjudicated,2026-09-23,,
+CLM-0042,Jose Santos,AWH-26151698,Al Wadi Health Insurance,Sales Invoice,2026-08-01,2026-08-31,2026-09-05,2026-10-05,Wire Transfer,Paid,2026-09-15,2026-10-01,AWH-REM-632562
+CLM-0043,Layla Haddad,AWH-26917358,Al Wadi Health Insurance,Sales Invoice,2026-08-01,2026-08-31,2026-09-05,2026-10-05,Wire Transfer,Paid,2026-09-18,2026-10-01,AWH-REM-297172
+CLM-0044,Lina Al Shukaili,AWH-26460777-01,Al Wadi Health Insurance,Sales Invoice,2026-08-01,2026-08-31,2026-09-05,2026-10-05,Wire Transfer,Paid,2026-09-16,2026-10-04,AWH-REM-182850
+CLM-0045,Maria Reyes,AWH-26669948,Al Wadi Health Insurance,Sales Invoice,2026-08-01,2026-08-31,2026-09-05,2026-10-05,Wire Transfer,Paid,2026-09-19,2026-10-05,AWH-REM-236257
+CLM-0046,Omar Hassan,AWH-26425113,Al Wadi Health Insurance,Sales Invoice,2026-08-01,2026-08-31,2026-09-05,2026-10-05,Wire Transfer,Paid,2026-09-23,2026-09-30,AWH-REM-239898
+CLM-0047,Shamsa Al Saadi,MSA-26562667,Muscat Shield Assurance,Sales Invoice,2026-08-01,2026-08-31,2026-09-05,2026-10-20,Wire Transfer,Adjudicated,2026-09-25,,
+CLM-0048,Talal Al Ghafri,GCT-26619773,Gulf Crescent TPA,Sales Invoice,2026-08-01,2026-08-31,2026-09-05,2026-11-04,Wire Transfer,Adjudicated,2026-09-20,,
+CLM-0049,Ayesha Siddiqui,GCT-26131430-01,Gulf Crescent TPA,Sales Invoice,2026-09-01,2026-09-30,2026-10-05,2026-12-04,Wire Transfer,Submitted,,,
+CLM-0050,Jana Al Riyami,MSA-26471370-01,Muscat Shield Assurance,Sales Invoice,2026-09-01,2026-09-30,2026-10-05,2026-11-19,Wire Transfer,Submitted,,,
+CLM-0051,Layla Haddad,AWH-26917358,Al Wadi Health Insurance,Sales Invoice,2026-09-01,2026-09-30,2026-10-05,2026-11-04,Wire Transfer,Submitted,,,
+CLM-0052,Talal Al Ghafri,GCT-26619773,Gulf Crescent TPA,Sales Invoice,2026-09-01,2026-09-30,2026-10-05,2026-12-04,Wire Transfer,Draft,,,

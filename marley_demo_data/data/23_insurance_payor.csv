@@ -1,0 +1,4 @@
+insurance_payor_name,website,insurance_claim_credit_days,claims_receivable_accounts.company,claims_receivable_accounts.account,rejected_claims_expense_accounts.company,rejected_claims_expense_accounts.account
+Al Wadi Health Insurance,https://alwadi-health.example.com,30,Marley Health Demo,Insurance Claims Receivable - MHD,Marley Health Demo,Rejected Insurance Claims - MHD
+Muscat Shield Assurance,https://muscatshield.example.com,45,Marley Health Demo,Insurance Claims Receivable - MHD,Marley Health Demo,Rejected Insurance Claims - MHD
+Gulf Crescent TPA,https://gulfcrescent-tpa.example.com,60,Marley Health Demo,Insurance Claims Receivable - MHD,Marley Health Demo,Rejected Insurance Claims - MHD

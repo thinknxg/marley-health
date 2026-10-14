@@ -6,10 +6,10 @@ Marley Health demo-data loader for Frappe v16 / ERPNext v16 / Marley Health v16.
     bench --site <site> execute marley_demo_data.loader.verify
     bench --site <site> execute marley_demo_data.loader.purge --kwargs "{'confirm': 1}"
 
-The loader reads the CSVs in ../data in manifest order. Masters are inserted only when
+The loader reads the CSVs in ./data in dependency order. Masters are inserted only when
 missing (idempotent). Transactions are created through the same controllers the UI uses,
-so Service Requests, Medication Requests, Patient Medical Records, bed
-occupancy and calendar Events are produced by Marley itself.
+so Service Requests, Medication Requests, insurance coverages, payor Journal Entries,
+Patient Medical Records, bed occupancy and calendar Events are produced by Marley itself.
 
 Everything it creates is recorded in private/files/marley_demo_state.json, which
 `purge` uses to remove the demo cleanly and restore Healthcare Settings.
@@ -19,6 +19,7 @@ import csv
 import json
 import os
 from collections import OrderedDict, defaultdict
+from contextlib import contextmanager
 
 import frappe
 from frappe.utils import add_days, cint, flt, get_datetime, getdate
@@ -123,8 +124,13 @@ def read_rows(fname):
 # main
 # ------------------------------------------------------------------------------------
 
-def load(company=None, submit=1, invoices=0, set_settings=1):
-    """Load the full demo dataset. Safe to re-run: existing records are skipped."""
+def load(company=None, submit=1, invoices=0, set_settings=1, insurance=1, insurance_billing=1):
+    """Load the full demo dataset. Safe to re-run: existing records are skipped.
+
+    insurance=0          skip payors, contracts, plans, eligibility, policies and coverages
+    insurance_billing=0  stop at coverages: no invoices, payor journal entries, claims or payments
+    invoices=1           also create draft Sales Invoices for the remaining (uninsured) visits
+    """
     frappe.flags.mute_emails = True
     frappe.flags.in_import = False  # run real controllers
     manifest = json.load(open(os.path.join(DATA_DIR, "manifest.json")))
@@ -137,7 +143,8 @@ def load(company=None, submit=1, invoices=0, set_settings=1):
     print(f"Loading Marley demo into company '{company}' (abbr {abbr}), anchor {manifest['anchor']}")
 
     ctx = frappe._dict(company=company, abbr=abbr, src_abbr=src_abbr, src_company=manifest["company"],
-                       state=_load_state(), log=Log(), submit=cint(submit))
+                       state=_load_state(), log=Log(), submit=cint(submit), insurance=cint(insurance),
+                       anchor=getdate(manifest["anchor"]))
     ctx.price_list = (
         "Standard Selling" if frappe.db.exists("Price List", "Standard Selling")
         else frappe.db.get_single_value("Selling Settings", "selling_price_list")
@@ -168,13 +175,33 @@ def load(company=None, submit=1, invoices=0, set_settings=1):
         ("17_healthcare_practitioner.csv", _practitioners, {}),
         ("18_patient.csv", _patients, {}),
         ("19_patient_relation_update.csv", _relations, {}),
-        ("20_patient_appointment.csv", _appointments, {}),
-        ("21_patient_encounter.csv", _encounters, {}),
-        ("22_vital_signs.csv", _vitals, {}),
-        ("23_lab_test_results.csv", _lab_tests, {}),
-        ("24_clinical_procedure.csv", _procedures, {}),
-        ("25_inpatient_record.csv", _inpatients, {}),
     ]
+    if ctx.insurance:
+        steps += [
+            ("20_account.csv", _accounts, {}),
+            ("21_price_list.csv", _price_lists, {}),
+            ("22_item_price.csv", _item_prices, {}),
+            ("23_insurance_payor.csv", _payors, {}),
+            ("24_insurance_payor_contract.csv", _contracts, {}),
+            ("25_insurance_eligibility_plan.csv", _masters, dict(key="insurance_plan_name")),
+            ("26_item_insurance_eligibility.csv", _eligibility, {}),
+            ("27_patient_insurance_policy.csv", _policies, {}),
+        ]
+    steps += [
+        ("28_patient_appointment.csv", _appointments, {}),
+        ("29_patient_encounter.csv", _encounters, {}),
+        ("30_vital_signs.csv", _vitals, {}),
+        ("31_lab_test_results.csv", _lab_tests, {}),
+        ("32_clinical_procedure.csv", _procedures, {}),
+        ("33_inpatient_record.csv", _inpatients, {}),
+    ]
+    if ctx.insurance:
+        steps += [("34_coverage_decisions.csv", _coverage_decisions, {})]
+        if cint(insurance_billing):
+            steps += [
+                ("35_insured_invoices.csv", _insured_invoices, {}),
+                ("36_insurance_claim.csv", _claims, {}),
+            ]
     try:
         for fname, fn, kw in steps:
             doctype = next(f["doctype"] for f in manifest["files"] if f["file"] == fname)
@@ -273,6 +300,10 @@ def _preflight(ctx):
         print(f"   created missing service-unit root {root}")
     if missing:
         frappe.throw("Marley seed data missing (is healthcare installed on this site?): " + "; ".join(missing))
+    age = (getdate() - ctx.anchor).days
+    if age > 14:
+        print(f"   WARNING: dataset anchor {ctx.anchor} is {age} days old. Past/future visits, contract years and "
+              "policy expiries are relative to it; regenerate with tools/generate_dataset.py --anchor <today>.")
 
 
 def _apply_settings(ctx):
@@ -419,6 +450,9 @@ def _appointments(ctx, fname, doctype):
         r["practitioner"] = _pr(ctx, r["practitioner"])
         r["service_unit"] = _su(ctx, r["service_unit"])
         r["duration"] = cint(r["duration"])
+        policy_ref = r.pop("_policy_ref", None)
+        if ctx.insurance and policy_ref:
+            r["insurance_policy"] = _policy(ctx, policy_ref)
         doc = _insert(ctx, doctype, r, ref)
         if doc:
             amap[ref] = doc.name
@@ -427,6 +461,12 @@ def _appointments(ctx, fname, doctype):
             # Status-dependent hooks may have moved status; pin the intended one
             if doc.status != r["status"]:
                 doc.db_set("status", r["status"], update_modified=False)
+                frappe.db.commit()
+            coverage = frappe.db.get_value(doctype, doc.name, "insurance_coverage")
+            if coverage:
+                _backdate_coverage(coverage, min(getdate(r["appointment_date"]), getdate()))
+                if r["status"] in ("Cancelled", "No Show"):
+                    _cancel_coverage(ctx, coverage, ref)
                 frappe.db.commit()
 
 
@@ -449,6 +489,9 @@ def _encounters(ctx, fname, doctype):
             d["appointment"] = amap[appt_ref]
         for row in d.get("procedure_prescription", []):
             row["no_of_sessions"] = cint(row.get("no_of_sessions") or 1)
+        policy_ref = d.pop("_policy_ref", None)
+        if ctx.insurance and policy_ref:
+            d["insurance_policy"] = _policy(ctx, policy_ref)
         doc = _insert(ctx, doctype, d, ref)
         if not doc:
             continue
@@ -460,6 +503,11 @@ def _encounters(ctx, fname, doctype):
                 for t in ("Service Request", "Medication Request"):
                     for n in frappe.get_all(t, {"order_group": doc.name}, pluck="name"):
                         _track(ctx, t, n)
+                for cov in frappe.get_all("Service Request", {"order_group": doc.name,
+                                                              "insurance_coverage": ["is", "set"]},
+                                          pluck="insurance_coverage"):
+                    _backdate_coverage(cov, getdate(doc.encounter_date))
+                frappe.db.commit()
             except Exception as e:
                 frappe.db.rollback()
                 ctx.log.fail(doctype + " (submit)", ref, e)
@@ -635,7 +683,7 @@ def _invoices(ctx):
         if ref in done:
             continue
         a = frappe.get_doc("Patient Appointment", appt)
-        if a.status != "Closed" or a.invoiced:
+        if a.status != "Closed" or a.invoiced or a.get("insurance_policy"):
             continue
         try:
             si = frappe.new_doc("Sales Invoice")
@@ -660,11 +708,443 @@ def _invoices(ctx):
 
 
 # ------------------------------------------------------------------------------------
+# insurance
+# ------------------------------------------------------------------------------------
+
+def _account_name(ctx, csv_name):
+    """CSV account names carry the source abbreviation; map them to the created ledgers."""
+    return ctx.state["maps"].get("account", {}).get(csv_name) or csv_name.replace(
+        f" - {ctx.src_abbr}", f" - {ctx.abbr}")
+
+
+def _parent_group(ctx, standard_parent, account_type):
+    company = frappe.get_cached_doc("Company", ctx.company)
+    candidate = f"{standard_parent} - {ctx.abbr}"
+    if frappe.db.get_value("Account", {"name": candidate, "is_group": 1}):
+        return candidate
+    if account_type == "Receivable" and company.default_receivable_account:
+        return frappe.db.get_value("Account", company.default_receivable_account, "parent_account")
+    if company.write_off_account:
+        return frappe.db.get_value("Account", company.write_off_account, "parent_account")
+    return frappe.db.get_value("Account", {"company": ctx.company, "is_group": 1, "root_type": "Expense",
+                                           "parent_account": ["is", "set"]})
+
+
+def _accounts(ctx, fname, doctype):
+    amap = ctx.state["maps"].setdefault("account", {})
+    for r in read_rows(fname):
+        csv_name = f"{r['account_name']} - {ctx.src_abbr}"
+        existing = frappe.db.get_value("Account", {"account_name": r["account_name"], "company": ctx.company})
+        if existing:
+            amap[csv_name] = existing
+            ctx.log.skip(doctype)
+            continue
+        parent = _parent_group(ctx, r["parent_account"].rsplit(" - ", 1)[0], r["account_type"])
+        data = dict(account_name=r["account_name"], parent_account=parent, company=ctx.company,
+                    account_type=r["account_type"] or None, is_group=0)
+        doc = _insert(ctx, doctype, data, r["account_name"])
+        if doc:
+            amap[csv_name] = doc.name
+
+
+def _price_lists(ctx, fname, doctype):
+    currency = frappe.get_cached_value("Company", ctx.company, "default_currency")
+    for r in read_rows(fname):
+        if frappe.db.exists(doctype, r["price_list_name"]):
+            ctx.log.skip(doctype)
+            continue
+        r["currency"] = currency
+        _insert(ctx, doctype, r, r["price_list_name"])
+
+
+def _item_prices(ctx, fname, doctype):
+    for r in read_rows(fname):
+        key = f"{r['item_code']} @ {r['price_list']}"
+        if frappe.db.exists(doctype, {"item_code": r["item_code"], "price_list": r["price_list"]}):
+            ctx.log.skip(doctype)
+            continue
+        uom = frappe.db.get_value("Item", r["item_code"], "stock_uom")
+        if not uom:
+            ctx.log.fail(doctype, key, f"Item {r['item_code']} not found")
+            continue
+        r["uom"] = uom
+        _insert(ctx, doctype, r, key)
+
+
+def _payors(ctx, fname, doctype):
+    for d in read_docs(fname):
+        name = d["insurance_payor_name"]
+        if frappe.db.exists(doctype, name):
+            ctx.log.skip(doctype)
+            continue
+        for table in ("claims_receivable_accounts", "rejected_claims_expense_accounts"):
+            for row in d.get(table, []):
+                row["company"] = ctx.company
+                row["account"] = _account_name(ctx, row["account"])
+        group_existed = frappe.db.exists("Customer Group", "Insurance Payor")
+        doc = _insert(ctx, doctype, d, name)
+        if doc:
+            customer = frappe.db.get_value(doctype, doc.name, "customer")
+            if customer:
+                _track(ctx, "Customer", customer)
+            if not group_existed and frappe.db.exists("Customer Group", "Insurance Payor"):
+                _track(ctx, "Customer Group", "Insurance Payor")
+
+
+def _contracts(ctx, fname, doctype):
+    for r in read_rows(fname):
+        r = _fix_company(ctx, r)
+        key = f"{r['insurance_payor']} {r['start_date']}"
+        if frappe.db.exists(doctype, {"insurance_payor": r["insurance_payor"], "company": ctx.company,
+                                      "start_date": r["start_date"], "docstatus": ["<", 2]}):
+            ctx.log.skip(doctype)
+            continue
+        r["company"] = ctx.company
+        doc = _insert(ctx, doctype, r, key)
+        if doc and ctx.submit:
+            _submit(ctx, doc, key)
+
+
+def _eligibility(ctx, fname, doctype):
+    for r in read_rows(fname):
+        filters = {"insurance_plan": r["insurance_plan"], "eligibility_for": r["eligibility_for"], "is_active": 1}
+        if r["eligibility_for"] == "Service":
+            filters.update(template_dt=r["template_dt"], template_dn=r["template_dn"])
+            key = f"{r['insurance_plan']}: {r['template_dn']}"
+        else:
+            filters.update(item_code=r["item_code"])
+            key = f"{r['insurance_plan']}: {r['item_code']}"
+        if frappe.db.exists(doctype, filters):
+            ctx.log.skip(doctype)
+            continue
+        _insert(ctx, doctype, r, key)
+
+
+def _policies(ctx, fname, doctype):
+    pmap = ctx.state["maps"].setdefault("policy", {})
+    for r in read_rows(fname):
+        number = r["policy_number"]
+        patient = _p(ctx, r["patient"])
+        existing = frappe.db.get_value(doctype, {"policy_number": number, "patient": patient, "docstatus": 1})
+        if existing:
+            pmap[number] = existing
+            ctx.log.skip(doctype)
+            continue
+        if getdate(r["policy_expiry_date"]) < getdate():
+            ctx.log.fail(doctype, number, f"expiry {r['policy_expiry_date']} is in the past - regenerate the "
+                                          "dataset with a current --anchor")
+            continue
+        r["patient"] = patient
+        doc = _insert(ctx, doctype, r, number)
+        if doc:
+            pmap[number] = doc.name
+            if ctx.submit:
+                _submit(ctx, doc, number)
+
+
+def _policy(ctx, number):
+    return ctx.state["maps"].get("policy", {}).get(number) or frappe.db.get_value(
+        "Patient Insurance Policy", {"policy_number": number, "docstatus": 1})
+
+
+def _submit(ctx, doc, ref):
+    try:
+        doc.submit()
+        frappe.db.commit()
+        return True
+    except Exception as e:
+        frappe.db.rollback()
+        ctx.log.fail(doc.doctype + " (submit)", ref, e)
+        return False
+
+
+def _backdate_coverage(name, date):
+    """Marley stamps coverages with the creation date; a demo history wants the date of service."""
+    if getdate(frappe.db.get_value("Patient Insurance Coverage", name, "posting_date")) > getdate(date):
+        frappe.db.set_value("Patient Insurance Coverage", name, "posting_date", date, update_modified=False)
+
+
+def _cancel_coverage(ctx, name, ref):
+    cov = frappe.get_doc("Patient Insurance Coverage", name)
+    if cov.docstatus == 1 and cov.status in ("Approved", "Rejected"):
+        try:
+            cov.flags.silent = True
+            cov.cancel()
+        except Exception as e:
+            frappe.db.rollback()
+            ctx.log.fail("Patient Insurance Coverage (cancel)", ref, e)
+
+
+def _visit_coverage(ctx, visit_ref, enc_ref, template_dt, template_dn):
+    if template_dt == "Patient Appointment":
+        appt = ctx.state["maps"].get("appointment", {}).get(visit_ref)
+        return appt and frappe.db.get_value("Patient Appointment", appt, "insurance_coverage"), None
+    enc = ctx.state["maps"].get("encounter", {}).get(enc_ref)
+    sr = enc and frappe.db.get_value("Service Request", {"order_group": enc, "template_dt": template_dt,
+                                                         "template_dn": template_dn},
+                                     ["name", "insurance_coverage"], as_dict=True)
+    return (sr.insurance_coverage, sr.name) if sr else (None, None)
+
+
+def _coverage_decisions(ctx, fname, doctype):
+    """Pre-authorisation outcomes for coverages created in Manual-approval mode."""
+    for r in read_rows(fname):
+        key = f"{r['_visit_ref']} {r['item_code']}"
+        cov_name, sr = _visit_coverage(ctx, r["_visit_ref"], r["_encounter_ref"], r["template_dt"], r["template_dn"])
+        if not cov_name:
+            ctx.log.fail("Coverage decision", key, "no coverage was created for this service")
+            continue
+        cov = frappe.get_doc(doctype, cov_name)
+        if cov.docstatus != 0 or r["_decision"] == "Pending":
+            if r["_decision"] == "Pending" and cov.docstatus == 0:
+                cov.add_comment("Comment", "Pre-authorisation requested; awaiting payor response.")
+            ctx.log.skip("Coverage decision")
+            continue
+        try:
+            cov.flags.silent = True
+            cov.status = r["_decision"]
+            cov.save(ignore_permissions=True)
+            cov.submit()
+            msg = f"Pre-authorisation {r['_decision'].lower()} by payor on {r['_decision_date']}"
+            cov.add_comment("Comment", msg + (f". Reason: {r['_reason']}" if r["_reason"] else ""))
+            if sr:
+                frappe.db.set_value("Service Request", sr, "coverage_status", cov.status, update_modified=False)
+            frappe.db.commit()
+            ctx.log.ok("Coverage decision")
+        except Exception as e:
+            frappe.db.rollback()
+            ctx.log.fail("Coverage decision", key, e)
+
+
+def _ensure_payment_account(ctx, mode_of_payment):
+    """Claims and remittances need a bank/cash ledger on the Mode of Payment for this company."""
+    if frappe.db.get_value("Mode of Payment Account", {"parent": mode_of_payment, "company": ctx.company},
+                           "default_account"):
+        return True
+    company = frappe.get_cached_doc("Company", ctx.company)
+    account = company.default_bank_account or frappe.db.get_value(
+        "Account", {"company": ctx.company, "account_type": "Bank", "is_group": 0, "disabled": 0})
+    if not account:
+        parent = frappe.db.get_value("Account", {"company": ctx.company, "account_type": "Bank", "is_group": 1})
+        if not parent:
+            ctx.log.fail("Mode of Payment", mode_of_payment, "no bank ledger or bank group in the chart of accounts")
+            return False
+        doc = _insert(ctx, "Account", dict(account_name="Insurance Remittance Bank", parent_account=parent,
+                                           company=ctx.company, account_type="Bank", is_group=0), "bank ledger")
+        if not doc:
+            return False
+        account = doc.name
+    mop = frappe.get_doc("Mode of Payment", mode_of_payment)
+    mop.append("accounts", {"company": ctx.company, "default_account": account})
+    mop.save(ignore_permissions=True)
+    frappe.db.commit()
+    _track(ctx, "__mop_account__", f"{mode_of_payment}|{ctx.company}")
+    print(f"   {mode_of_payment}: default account {account} set for {ctx.company} (removed by purge)")
+    return True
+
+
+@contextmanager
+def _coverage_rounding():
+    """Marley 16.6.1 keeps the line's payor share unrounded (3.562 x 80% = 2.8496) while the
+    payor Journal Entry posts it at currency precision (2.850). The claim later refuses a
+    remittance of 2.850 against a claim amount of 2.8496. Round the share to currency precision,
+    for invoices created by this loader only."""
+    from healthcare.healthcare.custom_doctype.sales_invoice import SalesInvoiceMixin
+
+    original = SalesInvoiceMixin.calculate_patient_insurance_coverage
+
+    def rounded(self):
+        original(self)
+        total = 0.0
+        for item in self.items:
+            if item.get("insurance_coverage_amount"):
+                item.insurance_coverage_amount = flt(item.insurance_coverage_amount, item.precision("amount"))
+                total += item.insurance_coverage_amount
+        if total:
+            self.total_insurance_coverage_amount = total
+            self.patient_payable_amount = flt(self.outstanding_amount) - total
+
+    SalesInvoiceMixin.calculate_patient_insurance_coverage = rounded
+    try:
+        yield
+    finally:
+        SalesInvoiceMixin.calculate_patient_insurance_coverage = original
+
+
+def _insured_invoices(ctx, fname, doctype):
+    with _coverage_rounding():
+        _insured_invoices_inner(ctx, fname, doctype)
+
+
+def _insured_invoices_inner(ctx, fname, doctype):
+    """Bill insured visits the way the clinic does: Get Items from Healthcare Services, then submit.
+    Marley posts a Journal Entry moving the covered amount to the payor on submit."""
+    from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+
+    from healthcare.healthcare.utils import get_healthcare_services_to_invoice
+
+    imap = ctx.state["maps"].setdefault("insured_invoice", {})
+    amap = ctx.state["maps"].get("appointment", {})
+    emap = ctx.state["maps"].get("encounter", {})
+    for r in read_rows(fname):
+        ref = r["_visit_ref"]
+        if ref in imap and frappe.db.exists(doctype, imap[ref]):
+            ctx.log.skip("Sales Invoice (insured)")
+            continue
+        appt, enc = amap.get(ref), emap.get(r["_encounter_ref"])
+        if not appt or not enc:
+            ctx.log.fail("Sales Invoice (insured)", ref, "visit was not created")
+            continue
+        try:
+            patient = frappe.db.get_value("Patient Appointment", appt, "patient")
+            customer = frappe.db.get_value("Patient", patient, "customer")
+            wanted = {("Patient Appointment", appt)} | {
+                ("Service Request", n) for n in frappe.get_all("Service Request", {"order_group": enc}, pluck="name")}
+            services = [x for x in get_healthcare_services_to_invoice(patient, customer, ctx.company)
+                        if (x.get("reference_type"), x.get("reference_name")) in wanted]
+            if not services:
+                ctx.log.skip("Sales Invoice (insured)")
+                continue
+            si = frappe.new_doc(doctype)
+            # disable_rounded_total: a rounded grand total (19.25 -> 19.00) leaves less outstanding than
+            # the payor shares Marley transfers per line, and the transfer Journal Entry is refused
+            si.update(dict(patient=patient, customer=customer, company=ctx.company, set_posting_time=1,
+                           posting_date=r["posting_date"], due_date=r["posting_date"], disable_rounded_total=1))
+            si.set_healthcare_services([_service_row(x) for x in services])
+            si.taxes_and_charges = None  # healthcare services are zero-rated in the demo
+            si.set("taxes", [])
+            si.calculate_taxes_and_totals()
+            si.insert(ignore_permissions=True)
+            si.submit()
+            frappe.db.commit()
+            _track(ctx, doctype, si.name)
+            for je in frappe.get_all("Journal Entry Account", {"reference_type": doctype, "reference_name": si.name,
+                                                               "docstatus": 1}, pluck="parent", distinct=True):
+                _track(ctx, "Journal Entry", je)
+            imap[ref] = si.name
+            ctx.log.ok("Sales Invoice (insured)")
+        except Exception as e:
+            frappe.db.rollback()
+            ctx.log.fail("Sales Invoice (insured)", ref, e)
+            continue
+
+        if cint(r["_copay_paid"]) and flt(frappe.db.get_value(doctype, si.name, "outstanding_amount")) > 0:
+            try:
+                pe = get_payment_entry(doctype, si.name)
+                pe.posting_date = r["posting_date"]
+                pe.mode_of_payment = r["_copay_mode"] or "Cash"
+                pe.remarks = f"Patient share for insured visit, {si.name}"
+                pe.insert(ignore_permissions=True)
+                pe.submit()
+                frappe.db.commit()
+                _track(ctx, "Payment Entry", pe.name)
+                ctx.log.ok("Payment Entry (co-pay)")
+            except Exception as e:
+                frappe.db.rollback()
+                ctx.log.fail("Payment Entry (co-pay)", ref, e)
+
+
+def _service_row(x):
+    """Same mapping the 'Get Items from Healthcare Services' dialog does in sales_invoice.js."""
+    row = {"dt": x.get("reference_type"), "dn": x.get("reference_name"), "item": x.get("service")}
+    for key in ("rate", "income_account", "qty", "description", "discount_percentage", "coverage_rate",
+                "coverage_qty", "insurance_payor", "patient_insurance_policy", "coverage_percentage",
+                "insurance_coverage"):
+        if x.get(key):
+            row[key] = x.get(key)
+    return row
+
+
+def _claims(ctx, fname, doctype):
+    from healthcare.healthcare.doctype.insurance_claim.insurance_claim import create_payment_entry
+
+    cmap = ctx.state["maps"].setdefault("claim", {})
+    rejections = defaultdict(dict)
+    for r in read_rows("37_claim_adjudication.csv"):
+        rejections[r["_claim_ref"]][(r["_visit_ref"], r["item_code"])] = r["payment_error_reason"]
+    visit_of_invoice = {si: ref for ref, si in ctx.state["maps"].get("insured_invoice", {}).items()}
+    modes_ready = {}
+
+    for r in read_rows(fname):
+        ref = r["_ref"]
+        if ref in cmap and frappe.db.exists(doctype, cmap[ref]):
+            ctx.log.skip(doctype)
+            continue
+        mode = r["mode_of_payment"]
+        if mode not in modes_ready:
+            modes_ready[mode] = _ensure_payment_account(ctx, mode)
+        if not modes_ready[mode]:
+            ctx.log.fail(doctype, ref, f"Mode of Payment {mode} has no account for {ctx.company}")
+            continue
+        policy = _policy(ctx, r["_policy_ref"])
+        if not policy:
+            ctx.log.fail(doctype, ref, f"policy {r['_policy_ref']} not found")
+            continue
+        try:
+            claim = frappe.new_doc(doctype)
+            claim.update(dict(insurance_payor=r["insurance_payor"], company=ctx.company, patient=_p(ctx, r["patient"]),
+                              insurance_policy=policy, posting_date_based_on=r["posting_date_based_on"],
+                              from_date=r["from_date"], to_date=r["to_date"], posting_date=r["posting_date"],
+                              due_date=r["due_date"], mode_of_payment=mode))
+            claim.get_coverages()
+            claim.insert(ignore_permissions=True)
+            frappe.db.commit()
+            _track(ctx, doctype, claim.name)
+            cmap[ref] = claim.name
+            ctx.log.ok(doctype)
+        except Exception as e:
+            frappe.db.rollback()
+            ctx.log.fail(doctype, ref, e)
+            continue
+
+        target = r["_target"]
+        if target == "Draft" or not _submit(ctx, claim, ref):
+            continue
+        if target not in ("Adjudicated", "Paid"):
+            continue
+
+        try:  # payor adjudication, recorded on the submitted claim
+            claim.reload()
+            approved = 0
+            for row in claim.coverages:
+                reason = rejections[ref].get((visit_of_invoice.get(row.sales_invoice), row.item_code))
+                if reason:
+                    row.status, row.payment_error_reason = "Rejected", reason
+                else:
+                    row.status = "Approved"
+                    approved += 1
+            claim.save(ignore_permissions=True)
+            claim.add_comment("Comment", f"Adjudicated by {claim.insurance_payor} on {r['_adjudication_date']}")
+            frappe.db.commit()
+            ctx.log.ok("Insurance Claim (adjudicated)")
+        except Exception as e:
+            frappe.db.rollback()
+            ctx.log.fail("Insurance Claim (adjudication)", ref, e)
+            continue
+
+        if target != "Paid" or not approved:
+            continue
+        try:  # remittance from the payor
+            pe = frappe.get_doc(create_payment_entry(claim))
+            pe.posting_date = r["_payment_date"]
+            pe.reference_no = r["_payment_reference"]
+            pe.reference_date = r["_payment_date"]
+            pe.insert(ignore_permissions=True)
+            pe.submit()
+            frappe.db.commit()
+            _track(ctx, "Payment Entry", pe.name)
+            ctx.log.ok("Payment Entry (remittance)")
+        except Exception as e:
+            frappe.db.rollback()
+            ctx.log.fail("Payment Entry (remittance)", ref, e)
+
+
+# ------------------------------------------------------------------------------------
 # verify / purge
 # ------------------------------------------------------------------------------------
 
 def verify():
-    """Print counts of demo records by doctype and status."""
+    """Print counts of demo records by doctype and status, plus the insurance money trail."""
     state = _load_state()
     pats = list(state.get("maps", {}).get("patient", {}).values())
     if not pats:
@@ -679,12 +1159,37 @@ def verify():
         counts = Counter(frappe.get_all(dt, filters={"patient": ["in", pats]}, pluck=field))
         print(f"  {dt:<22} " + ", ".join(f"{k}: {v}" for k, v in sorted(counts.items(), key=lambda x: str(x[0]))))
 
+    from collections import Counter
 
+    print("Insurance:")
+    for dt, field in [("Patient Insurance Policy", "docstatus"), ("Patient Insurance Coverage", "status"),
+                      ("Insurance Claim", "status")]:
+        counts = Counter(frappe.get_all(dt, filters={"patient": ["in", pats]}, pluck=field))
+        print(f"  {dt:<26} " + ", ".join(f"{k}: {v}" for k, v in sorted(counts.items(), key=lambda x: str(x[0]))))
+    for dt in ("Insurance Payor", "Insurance Payor Contract", "Insurance Payor Eligibility Plan",
+               "Item Insurance Eligibility"):
+        print(f"  {dt:<26} {sum(1 for d, _ in state['created'] if d == dt)} created by the demo")
+    sis = [n for d, n in state["created"] if d == "Sales Invoice"]
+    if sis:
+        tot = frappe.db.sql("""select count(*), sum(grand_total), sum(total_insurance_coverage_amount),
+            sum(outstanding_amount) from `tabSales Invoice` where name in %s and docstatus = 1""", [sis])[0]
+        print(f"  Submitted invoices {tot[0]}: billed {flt(tot[1]):.3f}, payor share {flt(tot[2]):.3f}, "
+              f"patient outstanding {flt(tot[3]):.3f}")
+    claims = frappe.db.sql("""select sum(insurance_claim_amount), sum(approved_amount), sum(rejected_amount),
+        sum(paid_amount), sum(outstanding_amount) from `tabInsurance Claim`
+        where patient in %s and docstatus = 1""", [pats])[0]
+    if claims[0]:
+        print("  Claims (submitted): claimed {:.3f}, approved {:.3f}, rejected {:.3f}, paid {:.3f}, "
+              "outstanding {:.3f}".format(*[flt(x) for x in claims]))
+
+
+# accounting documents that reference invoices go first, newest first
+PURGE_FIRST = ["Payment Entry", "Insurance Claim", "Journal Entry"]
 PURGE_ORDER = [
     "Sales Invoice", "Clinical Procedure", "Lab Test", "Sample Collection", "Observation", "Vital Signs",
     "Nursing Task", "Inpatient Medication Order", "Inpatient Record", "Medication Request", "Service Request",
-    "Therapy Plan", "Patient Encounter", "Fee Validity", "Patient Appointment", "Patient Medical Record",
-    "Medication Alert Log",
+    "Therapy Plan", "Patient Encounter", "Fee Validity", "Patient Appointment", "Patient Insurance Coverage",
+    "Patient Insurance Policy", "Patient Medical Record", "Medication Alert Log",
 ]
 
 
@@ -702,8 +1207,21 @@ def purge(confirm=0):
     # purge of ~1,500 records cannot overflow the queue (Frappe caps queued jobs at 500).
     _in_test = frappe.in_test
     frappe.in_test = True
+    # submitted invoices, journal and payment entries leave ledger rows behind on cancel;
+    # this ERPNext setting removes them when the document is deleted (restored at the end)
+    ledger_setting = frappe.db.get_single_value("Accounts Settings", "delete_linked_ledger_entries")
+    if cint(confirm):
+        frappe.db.set_single_value("Accounts Settings", "delete_linked_ledger_entries", 1)
+    created = state.get("created", [])
 
     def kill(dt, name):
+        if dt == "__mop_account__":
+            mop, company = name.split("|", 1)
+            if cint(confirm) and frappe.db.exists("Mode of Payment", mop):
+                doc = frappe.get_doc("Mode of Payment", mop)
+                doc.set("accounts", [a for a in doc.accounts if a.company != company])
+                doc.save(ignore_permissions=True)
+            return
         if not frappe.db.exists(dt, name):
             return
         if not cint(confirm):
@@ -715,10 +1233,34 @@ def purge(confirm=0):
                 doc.flags.ignore_links = True
                 doc.cancel()
             frappe.delete_doc(dt, name, force=True, ignore_permissions=True, ignore_missing=True)
+            frappe.db.commit()  # one record per transaction, so a failure rolls back only itself
         except Exception as e:
             frappe.db.rollback()
             failures.append(f"{dt} {name}")
             print(f"  ! {dt} {name}: {str(e)[:160]}")
+
+    # 0. payments, claims and payor journal entries
+    for n in reversed([n for d, n in created if d == "Payment Entry"]):
+        kill("Payment Entry", n)
+    if pats:
+        for n in frappe.get_all("Insurance Claim", {"patient": ["in", pats]}, pluck="name", order_by="creation desc"):
+            kill("Insurance Claim", n)
+    for n in reversed([n for d, n in created if d == "Journal Entry"]):
+        kill("Journal Entry", n)
+    frappe.db.commit()
+
+    # a coverage still awaiting pre-authorisation is a draft; Service Request.on_cancel would try to
+    # cancel it and fail, so detach and delete drafts first
+    # (also clears links left dangling by an interrupted earlier purge)
+    if pats and cint(confirm):
+        for sr, cov in frappe.get_all("Service Request", {"patient": ["in", pats], "insurance_coverage": ["is", "set"]},
+                                      ["name", "insurance_coverage"], as_list=True):
+            if frappe.db.get_value("Patient Insurance Coverage", cov, "docstatus") in (None, 0):
+                frappe.db.set_value("Service Request", sr, "insurance_coverage", None, update_modified=False)
+        frappe.db.commit()
+        for cov in frappe.get_all("Patient Insurance Coverage", {"patient": ["in", pats], "docstatus": 0},
+                                  pluck="name"):
+            kill("Patient Insurance Coverage", cov)
 
     # 1. everything hanging off demo patients, in dependency order
     for dt in PURGE_ORDER:
@@ -747,8 +1289,8 @@ def purge(confirm=0):
             frappe.db.set_value("Healthcare Service Unit", n, "occupancy_status", "Vacant")
 
     # 2. everything recorded in state, newest first (patients, masters, items...)
-    for dt, name in reversed(state.get("created", [])):
-        if dt in PURGE_ORDER:
+    for dt, name in reversed(created):
+        if dt in PURGE_ORDER or dt in PURGE_FIRST:
             continue
         kill(dt, name)
     frappe.db.commit()
@@ -775,4 +1317,7 @@ def purge(confirm=0):
             os.remove(_state_path())
         frappe.db.commit()
         print("Demo data removed and Healthcare Settings restored.")
+    if cint(confirm):
+        frappe.db.set_single_value("Accounts Settings", "delete_linked_ledger_entries", cint(ledger_setting))
+        frappe.db.commit()
     frappe.in_test = _in_test

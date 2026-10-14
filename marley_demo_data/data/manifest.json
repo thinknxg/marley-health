@@ -164,7 +164,71 @@
       "note": "Second pass: links children to parents. 'name' = Patient ID."
     },
     {
-      "file": "20_patient_appointment.csv",
+      "file": "20_account.csv",
+      "doctype": "Account",
+      "import_type": "Insert New Records",
+      "rows": 2,
+      "loader_only": false,
+      "note": "Insurance receivable + rejected-claims expense ledgers. The loader picks the parent groups from the company's own chart of accounts."
+    },
+    {
+      "file": "21_price_list.csv",
+      "doctype": "Price List",
+      "import_type": "Insert New Records",
+      "rows": 2,
+      "loader_only": false,
+      "note": "Negotiated payor tariffs. The loader uses the company currency."
+    },
+    {
+      "file": "22_item_price.csv",
+      "doctype": "Item Price",
+      "import_type": "Insert New Records",
+      "rows": 34,
+      "loader_only": false,
+      "note": "Lab and procedure items are created by their templates (stock UOM 'Unit' on a standard site)."
+    },
+    {
+      "file": "23_insurance_payor.csv",
+      "doctype": "Insurance Payor",
+      "import_type": "Insert New Records",
+      "rows": 3,
+      "loader_only": false,
+      "note": "Saving a payor makes Marley create its Customer (group 'Insurance Payor')."
+    },
+    {
+      "file": "24_insurance_payor_contract.csv",
+      "doctype": "Insurance Payor Contract",
+      "import_type": "Insert New Records",
+      "rows": 6,
+      "loader_only": false,
+      "note": "Two consecutive contract years per payor (previous + current). Submit after import."
+    },
+    {
+      "file": "25_insurance_eligibility_plan.csv",
+      "doctype": "Insurance Payor Eligibility Plan",
+      "import_type": "Insert New Records",
+      "rows": 5,
+      "loader_only": false,
+      "note": ""
+    },
+    {
+      "file": "26_item_insurance_eligibility.csv",
+      "doctype": "Item Insurance Eligibility",
+      "import_type": "Insert New Records",
+      "rows": 87,
+      "loader_only": false,
+      "note": "Consultations as Item rules, labs/procedures/bed as Service rules, chronic drugs as Item rules (pharmacy). Manual = pre-authorisation required."
+    },
+    {
+      "file": "27_patient_insurance_policy.csv",
+      "doctype": "Patient Insurance Policy",
+      "import_type": "Insert New Records",
+      "rows": 33,
+      "loader_only": false,
+      "note": "Dependants carry the principal's number with a -NN suffix. Expiry must be in the future when loaded. Submit after import."
+    },
+    {
+      "file": "28_patient_appointment.csv",
       "doctype": "Patient Appointment",
       "import_type": "Insert New Records",
       "rows": 137,
@@ -172,7 +236,7 @@
       "note": "Practitioners are referenced by full name; Marley names them HLC-PRAC-.YYYY.-, so the loader maps them. It also pins historic statuses (Checked Out -> Closed by the encounter)."
     },
     {
-      "file": "21_patient_encounter.csv",
+      "file": "29_patient_encounter.csv",
       "doctype": "Patient Encounter",
       "import_type": "Insert New Records",
       "rows": 239,
@@ -180,7 +244,7 @@
       "note": "Submitted by the loader; submission creates Service Requests and Medication Requests."
     },
     {
-      "file": "22_vital_signs.csv",
+      "file": "30_vital_signs.csv",
       "doctype": "Vital Signs",
       "import_type": "Insert New Records",
       "rows": 100,
@@ -188,7 +252,7 @@
       "note": "Linked to appointment + encounter, submitted"
     },
     {
-      "file": "23_lab_test_results.csv",
+      "file": "31_lab_test_results.csv",
       "doctype": "Lab Test",
       "import_type": "Insert New Records",
       "rows": 284,
@@ -196,7 +260,7 @@
       "note": "Long format, one row per result. Loader creates the Lab Test from the encounter's Service Request, fills results and submits Completed ones."
     },
     {
-      "file": "24_clinical_procedure.csv",
+      "file": "32_clinical_procedure.csv",
       "doctype": "Clinical Procedure",
       "import_type": "Insert New Records",
       "rows": 8,
@@ -204,12 +268,44 @@
       "note": "Created against the encounter's Service Request"
     },
     {
-      "file": "25_inpatient_record.csv",
+      "file": "33_inpatient_record.csv",
       "doctype": "Inpatient Record",
       "import_type": "Insert New Records",
       "rows": 4,
       "loader_only": true,
       "note": "Created via Marley's create_inpatient_record / admit_patient so bed occupancy and patient status update"
+    },
+    {
+      "file": "34_coverage_decisions.csv",
+      "doctype": "Patient Insurance Coverage",
+      "import_type": "Insert New Records",
+      "rows": 7,
+      "loader_only": true,
+      "note": "Pre-authorisation outcomes for coverages that the plan sets to Manual approval."
+    },
+    {
+      "file": "35_insured_invoices.csv",
+      "doctype": "Sales Invoice",
+      "import_type": "Insert New Records",
+      "rows": 59,
+      "loader_only": true,
+      "note": "One submitted invoice per insured visit, built with Marley's 'Get Items from Healthcare Services'; submission posts the payor transfer Journal Entry. Patient share paid by Payment Entry when _copay_paid=1."
+    },
+    {
+      "file": "36_insurance_claim.csv",
+      "doctype": "Insurance Claim",
+      "import_type": "Insert New Records",
+      "rows": 52,
+      "loader_only": true,
+      "note": "One claim per patient-policy per service month. _target: Draft | Submitted | Adjudicated | Paid. Coverages are pulled with the claim's own 'Get Coverages'."
+    },
+    {
+      "file": "37_claim_adjudication.csv",
+      "doctype": "Insurance Claim Coverage",
+      "import_type": "Insert New Records",
+      "rows": 7,
+      "loader_only": true,
+      "note": "Rows not listed here are Approved when their claim is adjudicated."
     }
   ],
   "stats": {
@@ -229,6 +325,22 @@
       "No Show": 3,
       "Open": 2,
       "Scheduled": 30
+    },
+    "insurance": {
+      "policies": 33,
+      "insured_invoices": 59,
+      "coverage_decisions": 7,
+      "manual_pending": 1,
+      "manual_rejected": 1,
+      "claims": 52,
+      "claims_by_target": {
+        "Draft": 1,
+        "Submitted": 3,
+        "Adjudicated": 8,
+        "Paid": 40
+      },
+      "claim_rows": 123,
+      "claim_rows_rejected": 7
     }
   }
 }

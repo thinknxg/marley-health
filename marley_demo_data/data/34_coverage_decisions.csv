@@ -1,0 +1,8 @@
+_visit_ref,_encounter_ref,template_dt,template_dn,item_code,_decision,_decision_date,_reason
+APT-0093,ENC-0065,Clinical Procedure Template,ECG 12-Lead,MHD-PROC-ECG,Approved,2026-06-30,
+APT-0005,ENC-0004,Lab Test Template,TSH,MHD-LAB-TSH,Approved,2026-07-17,
+APT-0050,ENC-0034,Lab Test Template,HbA1c,MHD-LAB-HBA1C,Approved,2026-07-29,
+APT-0006,ENC-0005,Lab Test Template,TSH,MHD-LAB-TSH,Approved,2026-08-11,
+APT-0051,ENC-0035,Lab Test Template,HbA1c,MHD-LAB-HBA1C,Rejected,2026-08-12,Prior authorisation not obtained before service
+APT-0007,ENC-0006,Lab Test Template,TSH,MHD-LAB-TSH,Approved,2026-09-02,
+APT-0052,ENC-0036,Lab Test Template,HbA1c,MHD-LAB-HBA1C,Pending,2026-09-15,

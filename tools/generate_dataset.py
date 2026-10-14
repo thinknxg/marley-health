@@ -296,6 +296,90 @@ INPATIENTS = [
     (19, "Admission Scheduled", "", 2, "Diabetology", "Elective admission for insulin initiation and education"),
 ]
 
+# --------------------------------------------------------------------------------------
+# Insurance (fictitious payors; names do not refer to real insurers)
+# --------------------------------------------------------------------------------------
+
+INS_ACCOUNTS = [
+    # account_name, standard parent group, account_type
+    ("Insurance Claims Receivable", "Accounts Receivable", "Receivable"),
+    ("Rejected Insurance Claims", "Indirect Expenses", ""),
+]
+
+# payor, short code, website, credit days, contract start month, contract price list
+PAYORS = [
+    ("Al Wadi Health Insurance", "AWH", "https://alwadi-health.example.com", 30, 1, "Al Wadi Tariff"),
+    ("Muscat Shield Assurance", "MSA", "https://muscatshield.example.com", 45, 4, ""),
+    ("Gulf Crescent TPA", "GCT", "https://gulfcrescent-tpa.example.com", 60, 7, ""),
+]
+
+# Price lists: name, discount vs standard rate (negotiated tariff)
+INS_PRICE_LISTS = [("Al Wadi Tariff", 0.10), ("Gulf Crescent Tariff", 0.05)]
+
+# Eligibility plans: plan, payor, plan-level price list
+PLANS = [
+    ("Al Wadi Gold", "Al Wadi Health Insurance", ""),
+    ("Al Wadi Silver", "Al Wadi Health Insurance", ""),
+    ("Muscat Shield Corporate", "Muscat Shield Assurance", ""),
+    ("Muscat Shield Essential", "Muscat Shield Assurance", ""),
+    ("Gulf Crescent Standard", "Gulf Crescent TPA", "Gulf Crescent Tariff"),
+]
+
+# Coverage rules per plan: (coverage %, discount %, mode of approval) by service group,
+# with per-item overrides. "bed" = General Ward Bed, "drugs" = Item-mode rules for chronic meds.
+PLAN_RULES = {
+    "Al Wadi Gold": dict(consult=(100, 0, "Automatic"), labs=(100, 0, "Automatic"), procs=(90, 0, "Automatic"),
+                         bed=(100, 0, "Automatic"), drugs=(80, 0, "Automatic"),
+                         overrides={"MHD-CONS-SPEC": (90, 0, "Automatic")}),
+    "Al Wadi Silver": dict(consult=(80, 0, "Automatic"), labs=(80, 0, "Automatic"), procs=(80, 0, "Manual"),
+                           overrides={}),
+    "Muscat Shield Corporate": dict(consult=(90, 10, "Automatic"), labs=(90, 10, "Automatic"),
+                                    procs=(90, 10, "Automatic"), bed=(90, 0, "Automatic"),
+                                    drugs=(75, 0, "Automatic"), overrides={}),
+    "Muscat Shield Essential": dict(consult=(70, 0, "Automatic"), labs=(70, 0, "Automatic"),
+                                    procs=(70, 0, "Manual"),
+                                    overrides={"MHD-LAB-HBA1C": (70, 0, "Manual"), "MHD-LAB-TSH": (70, 0, "Manual")}),
+    "Gulf Crescent Standard": dict(consult=(80, 5, "Automatic"), labs=(80, 5, "Automatic"),
+                                   procs=(80, 5, "Automatic"), overrides={}),
+}
+CHRONIC_DRUG_ITEMS = ["MHD-DRG-MET500", "MHD-DRG-AML5", "MHD-DRG-LOS50", "MHD-DRG-ATOR20", "MHD-DRG-LEVO50"]
+
+# Policies: patient index -> (plan, principal patient index or None for the member themself)
+POLICIES = {
+    # expatriate employees and dependants (employer-sponsored)
+    20: ("Muscat Shield Corporate", None), 21: ("Muscat Shield Corporate", 20), 44: ("Muscat Shield Corporate", 20),
+    22: ("Gulf Crescent Standard", None), 23: ("Gulf Crescent Standard", 22), 45: ("Gulf Crescent Standard", 22),
+    24: ("Al Wadi Silver", None), 47: ("Al Wadi Silver", 24),
+    25: ("Al Wadi Silver", None),
+    26: ("Al Wadi Gold", None), 48: ("Al Wadi Gold", 26),
+    27: ("Muscat Shield Corporate", None),
+    28: ("Al Wadi Gold", None), 29: ("Al Wadi Gold", None),
+    30: ("Gulf Crescent Standard", None),
+    31: ("Muscat Shield Corporate", None),
+    32: ("Muscat Shield Essential", None),
+    33: ("Al Wadi Silver", None),
+    34: ("Muscat Shield Corporate", None),
+    35: ("Al Wadi Gold", None),
+    # Omani nationals with private cover
+    1: ("Muscat Shield Essential", None), 41: ("Muscat Shield Essential", 1),
+    3: ("Muscat Shield Essential", None), 42: ("Muscat Shield Essential", 3),
+    5: ("Muscat Shield Corporate", None), 43: ("Muscat Shield Corporate", 5),
+    6: ("Al Wadi Gold", None), 49: ("Al Wadi Gold", 6),
+    8: ("Gulf Crescent Standard", None),
+    11: ("Al Wadi Silver", None),
+    13: ("Muscat Shield Corporate", None),
+    16: ("Muscat Shield Essential", None),
+    37: ("Al Wadi Gold", None),
+}
+
+REJECTION_REASONS = [
+    "Prior authorisation not obtained before service",
+    "Service not medically justified for the submitted diagnosis",
+    "Annual benefit limit for this service exceeded",
+    "Duplicate claim for the same service date",
+]
+WHOLE_CLAIM_REJECTION = "Member not eligible on date of service (policy suspended for unpaid premium)"
+
 
 # --------------------------------------------------------------------------------------
 # helpers
@@ -450,6 +534,268 @@ def vitals(rng, profile, age, sex):
         rr += rng.randint(2, 6)
     return dict(temperature=temp, pulse=pulse, respiratory_rate=rr, bp_systolic=sys_, bp_diastolic=dia,
                 height=h, weight=w)
+
+
+# --------------------------------------------------------------------------------------
+# insurance
+# --------------------------------------------------------------------------------------
+
+def add_months(d, n):
+    m = d.month - 1 + n
+    return dt.date(d.year + m // 12, m % 12 + 1, 1)
+
+
+def contract_periods(anchor, start_month):
+    """(previous, current) contract periods for a payor whose contract year starts in start_month."""
+    y = anchor.year if dt.date(anchor.year, start_month, 1) <= anchor else anchor.year - 1
+    cur_start = dt.date(y, start_month, 1)
+    cur_end = dt.date(y + 1, start_month, 1) - dt.timedelta(days=1)
+    prev_start = dt.date(y - 1, start_month, 1)
+    return (prev_start, cur_start - dt.timedelta(days=1)), (cur_start, cur_end)
+
+
+def standard_rates():
+    rates = {c: r for c, _, r, _ in SERVICE_ITEMS}
+    rates.update({code: r for _, code, _, r, *_ in LAB_SINGLE})
+    rates.update({code: r for _, code, _, r, _ in LAB_COMPOUND})
+    rates.update({code: r for _, code, _, r, _ in PROCEDURES})
+    return rates
+
+
+def plan_rule(plan, group, item_code=None):
+    rules = PLAN_RULES[plan]
+    if item_code and item_code in rules["overrides"]:
+        return rules["overrides"][item_code]
+    return rules.get(group)
+
+
+def build_insurance_masters(emit, irng, company, abbr, anchor, patient_names):
+    payor_by_name = {p[0]: p for p in PAYORS}
+    plan_payor = {p[0]: p[1] for p in PLANS}
+    periods = {p[0]: contract_periods(anchor, p[4]) for p in PAYORS}
+
+    emit("20_account.csv", ["account_name", "parent_account", "account_type", "is_group", "company"],
+         [(n, f"{parent} - {abbr}", t, 0, company) for n, parent, t in INS_ACCOUNTS], "Account",
+         note="Insurance receivable + rejected-claims expense ledgers. The loader picks the parent groups "
+              "from the company's own chart of accounts.")
+
+    emit("21_price_list.csv", ["price_list_name", "currency", "selling", "buying", "enabled"],
+         [(n, "OMR", 1, 0, 1) for n, _ in INS_PRICE_LISTS], "Price List",
+         note="Negotiated payor tariffs. The loader uses the company currency.")
+
+    rates = standard_rates()
+    rows = []
+    for pl, disc in INS_PRICE_LISTS:
+        for code, r in rates.items():
+            uom = "Nos" if code in {c for c, *_ in SERVICE_ITEMS} else "Unit"
+            rows.append((code, pl, fmt3(round(r * (1 - disc) * 4) / 4), uom))
+    emit("22_item_price.csv", ["item_code", "price_list", "price_list_rate", "uom"], rows, "Item Price",
+         note="Lab and procedure items are created by their templates (stock UOM 'Unit' on a standard site).")
+
+    emit("23_insurance_payor.csv",
+         ["insurance_payor_name", "website", "insurance_claim_credit_days",
+          "claims_receivable_accounts.company", "claims_receivable_accounts.account",
+          "rejected_claims_expense_accounts.company", "rejected_claims_expense_accounts.account"],
+         [(n, w, cd, company, f"{INS_ACCOUNTS[0][0]} - {abbr}", company, f"{INS_ACCOUNTS[1][0]} - {abbr}")
+          for n, _, w, cd, _, _ in PAYORS],
+         "Insurance Payor", note="Saving a payor makes Marley create its Customer (group 'Insurance Payor').")
+
+    rows = []
+    for n, _, _, _, _, pl in PAYORS:
+        (ps, pe), (cs, ce) = periods[n]
+        rows.append((n, company, ps.isoformat(), pe.isoformat(), (ps - dt.timedelta(days=21)).isoformat(), 1, pl))
+        rows.append((n, company, cs.isoformat(), ce.isoformat(), (cs - dt.timedelta(days=21)).isoformat(), 1, pl))
+    emit("24_insurance_payor_contract.csv",
+         ["insurance_payor", "company", "start_date", "end_date", "posting_date", "is_active", "default_price_list"],
+         rows, "Insurance Payor Contract",
+         note="Two consecutive contract years per payor (previous + current). Submit after import.")
+
+    emit("25_insurance_eligibility_plan.csv", ["insurance_plan_name", "insurance_payor", "price_list", "is_active"],
+         [(n, p, pl, 1) for n, p, pl in PLANS], "Insurance Payor Eligibility Plan")
+
+    rows = []
+    for plan, payor, _ in PLANS:
+        (ps, _), (_, ce) = periods[payor]
+        vf, vt = ps.isoformat(), ce.isoformat()
+
+        def add(kind, dt_, dn, item, rule):
+            cov, disc, mode = rule
+            rows.append((plan, kind, dt_, dn, item, cov, disc if cov < 100 else 0, mode, vf, vt, 1))
+
+        for code in ("MHD-CONS-GP", "MHD-CONS-SPEC"):
+            add("Item", "", "", code, plan_rule(plan, "consult", code))
+        for name, code, *_ in LAB_SINGLE + LAB_COMPOUND:
+            add("Service", "Lab Test Template", name, "", plan_rule(plan, "labs", code))
+        for name, code, *_ in PROCEDURES:
+            add("Service", "Clinical Procedure Template", name, "", plan_rule(plan, "procs", code))
+        if PLAN_RULES[plan].get("bed"):
+            add("Service", "Healthcare Service Unit Type", "General Ward Bed", "", PLAN_RULES[plan]["bed"])
+        if PLAN_RULES[plan].get("drugs"):
+            for code in CHRONIC_DRUG_ITEMS:
+                add("Item", "", "", code, PLAN_RULES[plan]["drugs"])
+    emit("26_item_insurance_eligibility.csv",
+         ["insurance_plan", "eligibility_for", "template_dt", "template_dn", "item_code", "coverage", "discount",
+          "mode_of_approval", "valid_from", "valid_till", "is_active"],
+         rows, "Item Insurance Eligibility",
+         note="Consultations as Item rules, labs/procedures/bed as Service rules, chronic drugs as Item rules "
+              "(pharmacy). Manual = pre-authorisation required.")
+
+    policy_no, ins = {}, {}
+    seq = {}
+    for pidx in sorted(POLICIES, key=lambda i: (POLICIES[i][1] is not None, i)):
+        plan, principal = POLICIES[pidx]
+        payor = plan_payor[plan]
+        code = payor_by_name[payor][1]
+        if principal is None:
+            seq[code] = seq.get(code, 0) + 1
+            number = f"{code}-{anchor.year % 100:02d}{irng.randint(100000, 999999)}"
+        else:
+            dep = sum(1 for k, v in policy_no.items() if v.startswith(policy_no[principal] + "-"))
+            number = f"{policy_no[principal]}-{dep + 1:02d}"
+        policy_no[pidx] = number
+        (ps, _), (cs, ce) = periods[payor]
+        ins[pidx] = dict(plan=plan, payor=payor, number=number, start=max(ps, cs - dt.timedelta(days=irng.randint(30, 400))),
+                         expiry=ce, credit=payor_by_name[payor][3])
+    emit("27_patient_insurance_policy.csv",
+         ["patient", "insurance_payor", "insurance_plan", "policy_number", "date", "policy_expiry_date"],
+         [(patient_names[i], d["payor"], d["plan"], d["number"], d["start"].isoformat(), d["expiry"].isoformat())
+          for i, d in sorted(ins.items(), key=lambda x: x[1]["number"])],
+         "Patient Insurance Policy",
+         note="Dependants carry the principal's number with a -NN suffix. Expiry must be in the future when loaded. "
+              "Submit after import.")
+    return policy_no, ins
+
+
+def build_insurance_billing(emit, irng, anchor, appts, encs, ins, prac_meta):
+    enc_by_appt = {e["appt_ref"]: e for e in encs if e["appt_ref"]}
+    lab_code = {t[0]: t[1] for t in LAB_SINGLE + LAB_COMPOUND}
+    lab_name = {t[1]: t[0] for t in LAB_SINGLE + LAB_COMPOUND}
+    proc_code = {p[0]: p[1] for p in PROCEDURES}
+
+    # 1) decide pre-authorisation outcomes for Manual-approval items, visit by visit
+    visits = []
+    for a in appts:
+        pidx = a["pidx"]
+        if pidx not in ins or a["status"] != "Checked Out" or a["ref"] not in enc_by_appt:
+            continue
+        e = enc_by_appt[a["ref"]]
+        plan = ins[pidx]["plan"]
+        items = [("Patient Appointment", a["appointment_type"], prac_meta[a["practitioner"]][6], "consult")]
+        items += [("Lab Test Template", lab_name[c], c, "labs") for c in e["labs"]]
+        items += [("Clinical Procedure Template", p, proc_code[p], "procs") for p in e["procs"]]
+        visits.append(dict(a=a, e=e, pidx=pidx, date=dt.date.fromisoformat(a["appointment_date"]),
+                           items=[(tdt, tdn, code, plan_rule(plan, g, code)[2]) for tdt, tdn, code, g in items]))
+
+    manual = [(v, it) for v in visits for it in v["items"] if it[3] == "Manual"]
+    outcome = {}
+    for i, (v, it) in enumerate(sorted(manual, key=lambda x: x[0]["date"])):
+        if i == len(manual) - 1:
+            outcome[(v["a"]["ref"], it[2])] = ("Pending", "")  # latest request still awaiting the payor
+        elif irng.random() < 0.25:
+            outcome[(v["a"]["ref"], it[2])] = ("Rejected", irng.choice(REJECTION_REASONS[:2]))
+        else:
+            outcome[(v["a"]["ref"], it[2])] = ("Approved", "")
+    if len(manual) > 2 and not any(o[0] == "Rejected" for o in outcome.values()):
+        v, it = sorted(manual, key=lambda x: x[0]["date"])[len(manual) // 2]
+        outcome[(v["a"]["ref"], it[2])] = ("Rejected", REJECTION_REASONS[0])
+
+    # 2) invoices for visits with no pending pre-authorisation; collect claimable rows
+    decisions, invoices, claim_items = [], [], []
+    for v in visits:
+        a, e, date = v["a"], v["e"], v["date"]
+        covered, pending = [], False
+        for tdt, tdn, code, mode in v["items"]:
+            if mode == "Manual":
+                decision, reason = outcome[(a["ref"], code)]
+                decisions.append((a["ref"], e["ref"], tdt, tdn, code, decision,
+                                  min(date + dt.timedelta(days=2), anchor).isoformat(), reason))
+                pending = pending or decision == "Pending"
+                if decision != "Approved":
+                    continue
+            covered.append(code)
+        if pending:
+            continue
+        invoices.append((a["ref"], e["ref"], a["patient"], ins[v["pidx"]]["number"], a["appointment_date"],
+                         1 if irng.random() < 0.92 else 0, "Cash"))
+        for code in covered:
+            claim_items.append(dict(pidx=v["pidx"], patient=a["patient"], visit=a["ref"], code=code, date=date))
+
+    emit("34_coverage_decisions.csv",
+         ["_visit_ref", "_encounter_ref", "template_dt", "template_dn", "item_code", "_decision", "_decision_date",
+          "_reason"], decisions, "Patient Insurance Coverage", loader_only=True,
+         note="Pre-authorisation outcomes for coverages that the plan sets to Manual approval.")
+    emit("35_insured_invoices.csv",
+         ["_visit_ref", "_encounter_ref", "patient", "_policy_ref", "posting_date", "_copay_paid", "_copay_mode"],
+         invoices, "Sales Invoice", loader_only=True,
+         note="One submitted invoice per insured visit, built with Marley's 'Get Items from Healthcare Services'; "
+              "submission posts the payor transfer Journal Entry. Patient share paid by Payment Entry when _copay_paid=1.")
+
+    # claims: one per patient-policy per service month, submitted on the 5th of the next month
+    groups = {}
+    for c in claim_items:
+        groups.setdefault((c["pidx"], c["date"].replace(day=1)), []).append(c)
+    claims, adjud = [], []
+    n = 0
+    for (pidx, month), rows in sorted(groups.items(), key=lambda x: (x[0][1], x[1][0]["patient"])):
+        posting = add_months(month, 1).replace(day=5)
+        if posting > anchor:
+            continue
+        n += 1
+        ref = f"CLM-{n:04d}"
+        d = ins[pidx]
+        due = posting + dt.timedelta(days=d["credit"])
+        adjudicated = posting + dt.timedelta(days=21) <= anchor
+        paid = adjudicated and due <= anchor
+        claims.append(dict(ref=ref, pidx=pidx, patient=rows[0]["patient"], policy=d["number"], payor=d["payor"],
+                           plan=d["plan"], month=month, posting=posting, due=due, adjudicated=adjudicated, paid=paid,
+                           rows=rows))
+
+    # whole-claim rejection: one small adjudicated, unpaid-by-design Al Wadi Silver claim
+    whole = next((c for c in claims if c["adjudicated"] and c["plan"] == "Al Wadi Silver" and len(c["rows"]) <= 2),
+                 None)
+    pending = [c for c in claims if not c["adjudicated"]]
+    draft = pending[-1] if pending else None
+
+    out = []
+    for c in claims:
+        if c is whole:
+            target = "Adjudicated"
+            for r in c["rows"]:
+                adjud.append((c["ref"], r["visit"], r["code"], "Rejected", WHOLE_CLAIM_REJECTION))
+        elif c["adjudicated"]:
+            target = "Paid" if c["paid"] else "Adjudicated"
+            for r in c["rows"]:
+                if irng.random() < 0.07:
+                    adjud.append((c["ref"], r["visit"], r["code"], "Rejected", irng.choice(REJECTION_REASONS)))
+        else:
+            target = "Draft" if c is draft else "Submitted"
+        adj_date = c["posting"] + dt.timedelta(days=irng.randint(10, 21)) if c["adjudicated"] else None
+        pay_date = None
+        if target == "Paid":
+            pay_date = min(anchor, max(adj_date, c["due"] - dt.timedelta(days=irng.randint(0, 5))))
+        payor_code = next(p[1] for p in PAYORS if p[0] == c["payor"])
+        out.append((c["ref"], c["patient"], c["policy"], c["payor"], "Sales Invoice",
+                    c["month"].isoformat(), (add_months(c["month"], 1) - dt.timedelta(days=1)).isoformat(),
+                    c["posting"].isoformat(), c["due"].isoformat(), "Wire Transfer", target,
+                    adj_date.isoformat() if adj_date else "", pay_date.isoformat() if pay_date else "",
+                    f"{payor_code}-REM-{irng.randint(100000, 999999)}" if pay_date else ""))
+    emit("36_insurance_claim.csv",
+         ["_ref", "patient", "_policy_ref", "insurance_payor", "posting_date_based_on", "from_date", "to_date",
+          "posting_date", "due_date", "mode_of_payment", "_target", "_adjudication_date", "_payment_date",
+          "_payment_reference"], out, "Insurance Claim", loader_only=True,
+         note="One claim per patient-policy per service month. _target: Draft | Submitted | Adjudicated | Paid. "
+              "Coverages are pulled with the claim's own 'Get Coverages'.")
+    emit("37_claim_adjudication.csv", ["_claim_ref", "_visit_ref", "item_code", "status", "payment_error_reason"],
+         adjud,
+         "Insurance Claim Coverage", loader_only=True,
+         note="Rows not listed here are Approved when their claim is adjudicated.")
+
+    return dict(policies=len(ins), insured_invoices=len(invoices), coverage_decisions=len(decisions),
+                manual_pending=sum(1 for d in decisions if d[5] == "Pending"),
+                manual_rejected=sum(1 for d in decisions if d[5] == "Rejected"),
+                claims=len(out), claims_by_target={t: sum(1 for o in out if o[10] == t)
+                                                  for t in ("Draft", "Submitted", "Adjudicated", "Paid")},
+                claim_rows=sum(len(c["rows"]) for c in claims), claim_rows_rejected=len(adjud))
 
 
 # --------------------------------------------------------------------------------------
@@ -611,6 +957,10 @@ def build(out, company, abbr, anchor):
          rows, "Patient", mode="Update Existing Records",
          note="Second pass: links children to parents. 'name' = Patient ID.")
 
+    # ---- Tier 4b: insurance masters + policies --------------------------------------
+    irng = random.Random(SEED + 1)  # separate stream: clinical data is unchanged by insurance
+    policy_no, ins = build_insurance_masters(emit, irng, company, abbr, anchor, patient_names)
+
     # ---- Tier 5: transactions --------------------------------------------------------
     cal = Calendar()
     start = anchor - dt.timedelta(days=120)
@@ -633,7 +983,7 @@ def build(out, company, abbr, anchor):
         appts.append(dict(ref=ref, patient=patient_names[pidx], appointment_type=appt_type, appointment_for="Practitioner",
                           practitioner=prac, department=prac_meta[prac][3], service_unit=su(prac_meta[prac][5]),
                           appointment_date=date.isoformat(), appointment_time=t, duration=duration, status=status,
-                          company=company))
+                          company=company, pidx=pidx, policy_ref=policy_no.get(pidx, "")))
         return appts[-1]
 
     def add_encounter(pidx, prof_key, appt, date, time, visit_no, ip_admission=False):
@@ -667,7 +1017,8 @@ def build(out, company, abbr, anchor):
                          practitioner=prac, appointment_type=appt["appointment_type"] if appt else "Consultation",
                          medical_department=prac_meta[prac][3], encounter_date=date.isoformat(), encounter_time=time,
                          company=company, encounter_comment=note, symptoms=symptoms, diagnosis=diagnosis,
-                         drugs=drug_rows, labs=lab_codes, procs=proc_list))
+                         drugs=drug_rows, labs=lab_codes, procs=proc_list, pidx=pidx,
+                         policy_ref=policy_no.get(pidx, ""), ip=ip_admission))
         # vitals
         v = vitals(rng, prof_key, p[3], p[2])
         vit.append(dict(patient=patient_names[pidx], signs_date=date.isoformat(), signs_time=time, company=company,
@@ -754,11 +1105,12 @@ def build(out, company, abbr, anchor):
 
     # ---- write transactions ------------------------------------------------------------
     appts.sort(key=lambda a: (a["appointment_date"], a["appointment_time"]))
-    emit("20_patient_appointment.csv",
+    emit("28_patient_appointment.csv",
          ["_ref", "patient", "appointment_type", "appointment_for", "practitioner", "department", "service_unit",
-          "appointment_date", "appointment_time", "duration", "status", "company"],
+          "appointment_date", "appointment_time", "duration", "status", "company", "_policy_ref"],
          [(a["ref"], a["patient"], a["appointment_type"], a["appointment_for"], a["practitioner"], a["department"],
-           a["service_unit"], a["appointment_date"], a["appointment_time"], a["duration"], a["status"], a["company"])
+           a["service_unit"], a["appointment_date"], a["appointment_time"], a["duration"], a["status"], a["company"],
+           a["policy_ref"])
           for a in appts], "Patient Appointment", loader_only=True,
          note="Practitioners are referenced by full name; Marley names them HLC-PRAC-.YYYY.-, so the loader maps "
               "them. It also pins historic statuses (Checked Out -> Closed by the encounter).")
@@ -767,7 +1119,7 @@ def build(out, company, abbr, anchor):
     rows = []
     for e in encs:
         parent = [e["ref"], e["appt_ref"], e["patient"], e["practitioner"], e["appointment_type"], e["medical_department"],
-                  e["encounter_date"], e["encounter_time"], e["company"], e["encounter_comment"]]
+                  e["encounter_date"], e["encounter_time"], e["company"], e["encounter_comment"], e["policy_ref"]]
         rows += child_block(parent, [
             (1, [(s,) for s in e["symptoms"]]),
             (1, [(d,) for d in e["diagnosis"]]),
@@ -775,9 +1127,9 @@ def build(out, company, abbr, anchor):
             (1, [(next(t[0] for t in LAB_SINGLE + LAB_COMPOUND if t[1] == c),) for c in e["labs"]]),
             (2, [(p, 1) for p in e["procs"]]),
         ])
-    emit("21_patient_encounter.csv",
+    emit("29_patient_encounter.csv",
          ["_ref", "_appointment_ref", "patient", "practitioner", "appointment_type", "medical_department",
-          "encounter_date", "encounter_time", "company", "encounter_comment",
+          "encounter_date", "encounter_time", "company", "encounter_comment", "_policy_ref",
           "symptoms.complaint", "diagnosis.diagnosis",
           "drug_prescription.drug_code", "drug_prescription.dosage_form", "drug_prescription.dosage",
           "drug_prescription.period", "drug_prescription.comment",
@@ -787,26 +1139,26 @@ def build(out, company, abbr, anchor):
          note="Submitted by the loader; submission creates Service Requests and Medication Requests.")
 
     vit.sort(key=lambda v: (v["signs_date"], v["signs_time"]))
-    emit("22_vital_signs.csv",
+    emit("30_vital_signs.csv",
          ["_appointment_ref", "_encounter_ref", "patient", "signs_date", "signs_time", "temperature", "pulse",
           "respiratory_rate", "bp_systolic", "bp_diastolic", "height", "weight", "company"],
          [(v["appt_ref"], v["enc_ref"], v["patient"], v["signs_date"], v["signs_time"], v["temperature"], v["pulse"],
            v["respiratory_rate"], v["bp_systolic"], v["bp_diastolic"], v["height"], v["weight"], v["company"])
           for v in vit], "Vital Signs", loader_only=True, note="Linked to appointment + encounter, submitted")
 
-    emit("23_lab_test_results.csv",
+    emit("31_lab_test_results.csv",
          ["_encounter_ref", "template", "lab_test_name", "result_value", "status", "result_date"],
          [(x["enc_ref"], x["template"], x["lab_test_name"], x["result_value"], x["status"], x["result_date"]) for x in labs],
          "Lab Test", loader_only=True,
          note="Long format, one row per result. Loader creates the Lab Test from the encounter's Service Request, "
               "fills results and submits Completed ones.")
 
-    emit("24_clinical_procedure.csv",
+    emit("32_clinical_procedure.csv",
          ["_encounter_ref", "procedure_template", "start_date", "start_time", "status"],
          [(x["enc_ref"], x["procedure_template"], x["start_date"], x["start_time"], x["status"]) for x in procs],
          "Clinical Procedure", loader_only=True, note="Created against the encounter's Service Request")
 
-    emit("25_inpatient_record.csv",
+    emit("33_inpatient_record.csv",
          ["patient", "_admission_encounter_ref", "status", "medical_department", "primary_practitioner",
           "admission_practitioner", "admission_service_unit_type", "expected_length_of_stay",
           "admission_instruction", "_bed", "_check_in", "company"],
@@ -816,11 +1168,14 @@ def build(out, company, abbr, anchor):
          "Inpatient Record", loader_only=True,
          note="Created via Marley's create_inpatient_record / admit_patient so bed occupancy and patient status update")
 
+    ins_stats = build_insurance_billing(emit, irng, anchor, appts, encs, ins, prac_meta)
+
     stats = dict(patients=len(PATIENTS), appointments=len(appts), encounters=len(encs), vital_signs=len(vit),
                  lab_tests=len({(x["enc_ref"], x["template"]) for x in labs}), lab_result_rows=len(labs),
                  clinical_procedures=len(procs), inpatient_records=len(ip_rows),
                  appointment_status={s: sum(1 for a in appts if a["status"] == s)
-                                     for s in sorted({a["status"] for a in appts})})
+                                     for s in sorted({a["status"] for a in appts})},
+                 insurance=ins_stats)
     manifest["stats"] = stats
     with open(os.path.join(out, "manifest.json"), "w") as fh:
         json.dump(manifest, fh, indent=2)
