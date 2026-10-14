@@ -1,0 +1,5 @@
+service_unit_type,allow_appointments,inpatient_occupancy,is_billable,item_code,item_group,rate,uom,no_of_hours
+Consultation Room,1,0,0,,,,,
+Procedure Room,1,0,0,,,,,
+Laboratory,1,0,0,,,,,
+General Ward Bed,0,1,1,MHD-WARD-BED,Healthcare Services,35.000,Day,24

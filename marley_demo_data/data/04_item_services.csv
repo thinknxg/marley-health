@@ -1,0 +1,5 @@
+item_code,item_name,item_group,stock_uom,is_stock_item,is_sales_item,is_purchase_item,include_item_in_manufacturing,standard_rate,description
+MHD-CONS-GP,OPD Consultation - General,Healthcare Services,Nos,0,1,0,0,12.000,"Outpatient consultation, general / family medicine"
+MHD-CONS-SPEC,OPD Consultation - Specialist,Healthcare Services,Nos,0,1,0,0,20.000,"Outpatient consultation, specialist"
+MHD-CONS-FU,OPD Follow-up Visit,Healthcare Services,Nos,0,1,0,0,8.000,Outpatient follow-up visit within validity
+MHD-IP-VISIT,Inpatient Visit Charge,Healthcare Services,Nos,0,1,0,0,15.000,Daily inpatient practitioner visit

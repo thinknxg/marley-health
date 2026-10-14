@@ -1,0 +1,20 @@
+healthcare_service_unit_name,parent_healthcare_service_unit,is_group,service_unit_type,company
+Marley Clinic,All Healthcare Service Units - MHD,1,,Marley Health Demo
+Marley OPD,Marley Clinic,1,,Marley Health Demo
+Marley Ward A,Marley Clinic,1,,Marley Health Demo
+OPD Room 1,Marley OPD,0,Consultation Room,Marley Health Demo
+OPD Room 2,Marley OPD,0,Consultation Room,Marley Health Demo
+OPD Room 3,Marley OPD,0,Consultation Room,Marley Health Demo
+OPD Room 4,Marley OPD,0,Consultation Room,Marley Health Demo
+OPD Room 5,Marley OPD,0,Consultation Room,Marley Health Demo
+OPD Room 6,Marley OPD,0,Consultation Room,Marley Health Demo
+OPD Room 7,Marley OPD,0,Consultation Room,Marley Health Demo
+OPD Room 8,Marley OPD,0,Consultation Room,Marley Health Demo
+Procedure Room 1,Marley OPD,0,Procedure Room,Marley Health Demo
+Main Laboratory,Marley Clinic,0,Laboratory,Marley Health Demo
+Ward A Bed 01,Marley Ward A,0,General Ward Bed,Marley Health Demo
+Ward A Bed 02,Marley Ward A,0,General Ward Bed,Marley Health Demo
+Ward A Bed 03,Marley Ward A,0,General Ward Bed,Marley Health Demo
+Ward A Bed 04,Marley Ward A,0,General Ward Bed,Marley Health Demo
+Ward A Bed 05,Marley Ward A,0,General Ward Bed,Marley Health Demo
+Ward A Bed 06,Marley Ward A,0,General Ward Bed,Marley Health Demo

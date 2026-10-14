@@ -1,0 +1,21 @@
+generic_name,medication_class,strength,strength_uom,dosage_form,default_prescription_dosage,default_prescription_duration,price_list,linked_items.item_code,linked_items.item_group,linked_items.stock_uom,linked_items.rate,linked_items.is_billable
+Metformin,Metformin,500,mg,Tablet,BID,1 Month,Standard Selling,MHD-DRG-MET500,Drug,Nos,2.500,1
+Sitagliptin,Sitagliptin,100,mg,Tablet,1-0-0,1 Month,Standard Selling,MHD-DRG-SITA100,Drug,Nos,14.000,1
+Amlodipine,Amlodipine,5,mg,Tablet,1-0-0,1 Month,Standard Selling,MHD-DRG-AML5,Drug,Nos,3.000,1
+Losartan,Losartan,50,mg,Tablet,1-0-0,1 Month,Standard Selling,MHD-DRG-LOS50,Drug,Nos,4.500,1
+Atorvastatin,Atorvastatin,20,mg,Tablet,0-0-1,1 Month,Standard Selling,MHD-DRG-ATOR20,Drug,Nos,5.000,1
+Aspirin,Aspirin,81,mg,Tablet,1-0-0,1 Month,Standard Selling,MHD-DRG-ASP81,Drug,Nos,1.500,1
+Paracetamol,Paracetamol,500,mg,Tablet,TID,5 Day,Standard Selling,MHD-DRG-PCM500,Drug,Nos,0.800,1
+Ibuprofen,Ibuprofen,400,mg,Tablet,TID,5 Day,Standard Selling,MHD-DRG-IBU400,Drug,Nos,1.200,1
+Amoxicillin,Amoxicillin,500,mg,Capsule,TID,1 Week,Standard Selling,MHD-DRG-AMOX500,Drug,Nos,2.000,1
+Ciprofloxacin,Ciprofloxacin,500,mg,Tablet,BID,5 Day,Standard Selling,MHD-DRG-CIP500,Drug,Nos,2.800,1
+Cetirizine,Cetirizine,10,mg,Tablet,Once Bedtime,1 Week,Standard Selling,MHD-DRG-CET10,Drug,Nos,1.000,1
+Loratadine,Loratadine,10,mg,Tablet,1-0-0,2 Week,Standard Selling,MHD-DRG-LOR10,Drug,Nos,1.300,1
+Montelukast,Montelukast,10,mg,Tablet,Once Bedtime,1 Month,Standard Selling,MHD-DRG-MONT10,Drug,Nos,6.000,1
+Salbutamol,Salbutamol,100,mcg,Inhaler,QID,1 Month,Standard Selling,MHD-DRG-SALB100,Drug,Nos,3.500,1
+Budesonide,Budesonide,200,mcg,Inhaler,BID,1 Month,Standard Selling,MHD-DRG-BUD200,Drug,Nos,9.000,1
+Omeprazole,Omeprazole,20,mg,Capsule,1-0-0,1 Month,Standard Selling,MHD-DRG-OME20,Drug,Nos,2.200,1
+Levothyroxine,Levothyroxine,50,mcg,Tablet,1-0-0,1 Month,Standard Selling,MHD-DRG-LEVO50,Drug,Nos,2.000,1
+Ferrous Sulfate,Ferrous Sulfate,200,mg,Tablet,1-0-1,1 Month,Standard Selling,MHD-DRG-FESO4,Drug,Nos,1.000,1
+Ondansetron,Ondansetron,4,mg,Syrup,BID,3 Day,Standard Selling,MHD-DRG-OND4S,Drug,Nos,2.500,1
+Oral Rehydration Salts,Oral Rehydration Salts,20.5,g,Oral Powder,QID,3 Day,Standard Selling,MHD-DRG-ORS,Drug,Nos,0.500,1

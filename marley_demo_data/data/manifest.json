@@ -1,0 +1,234 @@
+{
+  "company": "Marley Health Demo",
+  "abbr": "MHD",
+  "anchor": "2026-10-13",
+  "files": [
+    {
+      "file": "00_uom.csv",
+      "doctype": "UOM",
+      "import_type": "Insert New Records",
+      "rows": 4,
+      "loader_only": false,
+      "note": ""
+    },
+    {
+      "file": "01_customer_group.csv",
+      "doctype": "Customer Group",
+      "import_type": "Insert New Records",
+      "rows": 1,
+      "loader_only": false,
+      "note": ""
+    },
+    {
+      "file": "02_territory.csv",
+      "doctype": "Territory",
+      "import_type": "Insert New Records",
+      "rows": 1,
+      "loader_only": false,
+      "note": ""
+    },
+    {
+      "file": "03_item_group.csv",
+      "doctype": "Item Group",
+      "import_type": "Insert New Records",
+      "rows": 1,
+      "loader_only": false,
+      "note": "'Laboratory' and 'Drug' item groups are seeded by Marley on install"
+    },
+    {
+      "file": "04_item_services.csv",
+      "doctype": "Item",
+      "import_type": "Insert New Records",
+      "rows": 4,
+      "loader_only": false,
+      "note": "standard_rate creates an Item Price in the default selling price list"
+    },
+    {
+      "file": "05_medical_department.csv",
+      "doctype": "Medical Department",
+      "import_type": "Insert New Records",
+      "rows": 3,
+      "loader_only": false,
+      "note": "Marley seeds 23 departments on install (Cardiology, Diabetology, ENT, ...); only these three are new"
+    },
+    {
+      "file": "06_dosage_form.csv",
+      "doctype": "Dosage Form",
+      "import_type": "Insert New Records",
+      "rows": 2,
+      "loader_only": false,
+      "note": ""
+    },
+    {
+      "file": "07_lab_test_uom.csv",
+      "doctype": "Lab Test UOM",
+      "import_type": "Insert New Records",
+      "rows": 6,
+      "loader_only": false,
+      "note": ""
+    },
+    {
+      "file": "08_complaint.csv",
+      "doctype": "Complaint",
+      "import_type": "Insert New Records",
+      "rows": 30,
+      "loader_only": false,
+      "note": ""
+    },
+    {
+      "file": "09_diagnosis.csv",
+      "doctype": "Diagnosis",
+      "import_type": "Insert New Records",
+      "rows": 16,
+      "loader_only": false,
+      "note": ""
+    },
+    {
+      "file": "10_appointment_type.csv",
+      "doctype": "Appointment Type",
+      "import_type": "Insert New Records",
+      "rows": 4,
+      "loader_only": false,
+      "note": ""
+    },
+    {
+      "file": "11_practitioner_schedule.csv",
+      "doctype": "Practitioner Schedule",
+      "import_type": "Insert New Records",
+      "rows": 200,
+      "loader_only": false,
+      "note": ""
+    },
+    {
+      "file": "12_service_unit_type.csv",
+      "doctype": "Healthcare Service Unit Type",
+      "import_type": "Insert New Records",
+      "rows": 4,
+      "loader_only": false,
+      "note": "Billable bed type auto-creates its Item"
+    },
+    {
+      "file": "13_healthcare_service_unit.csv",
+      "doctype": "Healthcare Service Unit",
+      "import_type": "Insert New Records",
+      "rows": 19,
+      "loader_only": false,
+      "note": "Tree. Root 'All Healthcare Service Units - MHD' is created by Marley per company. Names get the ' - MHD' suffix."
+    },
+    {
+      "file": "14_lab_test_template.csv",
+      "doctype": "Lab Test Template",
+      "import_type": "Insert New Records",
+      "rows": 20,
+      "loader_only": false,
+      "note": "Each template auto-creates a service Item (code = lab_test_code)"
+    },
+    {
+      "file": "15_clinical_procedure_template.csv",
+      "doctype": "Clinical Procedure Template",
+      "import_type": "Insert New Records",
+      "rows": 5,
+      "loader_only": false,
+      "note": "Each template auto-creates a service Item"
+    },
+    {
+      "file": "16_medication.csv",
+      "doctype": "Medication",
+      "import_type": "Insert New Records",
+      "rows": 20,
+      "loader_only": false,
+      "note": "medication_class uses Marley's seeded ingredient classes; linked items are created as stock Items"
+    },
+    {
+      "file": "17_healthcare_practitioner.csv",
+      "doctype": "Healthcare Practitioner",
+      "import_type": "Insert New Records",
+      "rows": 9,
+      "loader_only": false,
+      "note": "IDs come from the HLC-PRAC-.YYYY.- naming series; later files use '<first> <last>'"
+    },
+    {
+      "file": "18_patient.csv",
+      "doctype": "Patient",
+      "import_type": "Insert New Records",
+      "rows": 50,
+      "loader_only": false,
+      "note": "With Healthcare Settings > Patient Name By = 'Patient Name', each ID equals '<first> <last>'."
+    },
+    {
+      "file": "19_patient_relation_update.csv",
+      "doctype": "Patient",
+      "import_type": "Update Existing Records",
+      "rows": 12,
+      "loader_only": false,
+      "note": "Second pass: links children to parents. 'name' = Patient ID."
+    },
+    {
+      "file": "20_patient_appointment.csv",
+      "doctype": "Patient Appointment",
+      "import_type": "Insert New Records",
+      "rows": 137,
+      "loader_only": true,
+      "note": "Practitioners are referenced by full name; Marley names them HLC-PRAC-.YYYY.-, so the loader maps them. It also pins historic statuses (Checked Out -> Closed by the encounter)."
+    },
+    {
+      "file": "21_patient_encounter.csv",
+      "doctype": "Patient Encounter",
+      "import_type": "Insert New Records",
+      "rows": 239,
+      "loader_only": true,
+      "note": "Submitted by the loader; submission creates Service Requests and Medication Requests."
+    },
+    {
+      "file": "22_vital_signs.csv",
+      "doctype": "Vital Signs",
+      "import_type": "Insert New Records",
+      "rows": 100,
+      "loader_only": true,
+      "note": "Linked to appointment + encounter, submitted"
+    },
+    {
+      "file": "23_lab_test_results.csv",
+      "doctype": "Lab Test",
+      "import_type": "Insert New Records",
+      "rows": 284,
+      "loader_only": true,
+      "note": "Long format, one row per result. Loader creates the Lab Test from the encounter's Service Request, fills results and submits Completed ones."
+    },
+    {
+      "file": "24_clinical_procedure.csv",
+      "doctype": "Clinical Procedure",
+      "import_type": "Insert New Records",
+      "rows": 8,
+      "loader_only": true,
+      "note": "Created against the encounter's Service Request"
+    },
+    {
+      "file": "25_inpatient_record.csv",
+      "doctype": "Inpatient Record",
+      "import_type": "Insert New Records",
+      "rows": 4,
+      "loader_only": true,
+      "note": "Created via Marley's create_inpatient_record / admit_patient so bed occupancy and patient status update"
+    }
+  ],
+  "stats": {
+    "patients": 50,
+    "appointments": 137,
+    "encounters": 100,
+    "vital_signs": 100,
+    "lab_tests": 103,
+    "lab_result_rows": 284,
+    "clinical_procedures": 8,
+    "inpatient_records": 4,
+    "appointment_status": {
+      "Cancelled": 3,
+      "Checked In": 2,
+      "Checked Out": 96,
+      "Confirmed": 1,
+      "No Show": 3,
+      "Open": 2,
+      "Scheduled": 30
+    }
+  }
+}

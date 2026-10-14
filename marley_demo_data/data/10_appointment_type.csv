@@ -1,0 +1,5 @@
+appointment_type,default_duration,allow_booking_for,color
+Consultation,15,Practitioner,#3b82f6
+Follow-up,15,Practitioner,#10b981
+Procedure Visit,30,Practitioner,#f59e0b
+Annual Health Check,30,Practitioner,#8b5cf6

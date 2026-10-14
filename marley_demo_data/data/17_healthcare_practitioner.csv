@@ -1,0 +1,10 @@
+first_name,last_name,gender,department,status,practitioner_type,mobile_phone,op_consulting_charge_item,op_consulting_charge,inpatient_visit_charge_item,inpatient_visit_charge,practitioner_schedules.schedule,practitioner_schedules.service_unit
+Salim,Al Harthy,Male,General Medicine,Active,Internal,+968 97100000,MHD-CONS-GP,12.000,MHD-IP-VISIT,15.000,Marley Morning Sun-Thu,OPD Room 1 - MHD
+Maryam,Al Lawati,Female,Family Medicine,Active,Internal,+968 97113579,MHD-CONS-GP,12.000,MHD-IP-VISIT,15.000,Marley Evening Sun-Thu,OPD Room 2 - MHD
+Rajesh,Menon,Male,Cardiology,Active,Internal,+968 97127158,MHD-CONS-SPEC,20.000,MHD-IP-VISIT,15.000,Marley Morning Sun-Thu,OPD Room 3 - MHD
+Fatma,Al Rawahi,Female,Diabetology,Active,Internal,+968 97140737,MHD-CONS-SPEC,20.000,MHD-IP-VISIT,15.000,Marley Morning Sun-Thu,OPD Room 4 - MHD
+Ahmed,Al Busaidi,Male,Paediatrics,Active,Internal,+968 97154316,MHD-CONS-SPEC,18.000,MHD-IP-VISIT,15.000,Marley Evening Sun-Thu,OPD Room 5 - MHD
+Khalid,Al Siyabi,Male,Gastroenterology,Active,Internal,+968 97167895,MHD-CONS-SPEC,20.000,MHD-IP-VISIT,15.000,Marley Evening Sun-Thu,OPD Room 6 - MHD
+Priya,Nair,Female,ENT,Active,Internal,+968 97181474,MHD-CONS-SPEC,18.000,MHD-IP-VISIT,15.000,Marley Morning Sun-Thu,OPD Room 7 - MHD
+Hassan,Farouk,Male,Orthopaedics,Active,Internal,+968 97195053,MHD-CONS-SPEC,20.000,MHD-IP-VISIT,15.000,Marley Evening Sun-Thu,OPD Room 8 - MHD
+Nadia,Rahman,Female,Pathology,Active,Internal,+968 97208632,,,,,,

@@ -1,0 +1,5 @@
+patient,_admission_encounter_ref,status,medical_department,primary_practitioner,admission_practitioner,admission_service_unit_type,expected_length_of_stay,admission_instruction,_bed,_check_in,company
+Muna Al Riyami,ENC-0097,Admitted,General Medicine,Salim Al Harthy,Salim Al Harthy,General Ward Bed,3,"Acute asthma exacerbation, nebulization and IV steroids",Ward A Bed 01 - MHD,2026-10-12 13:00:00,Marley Health Demo
+Reem Al Hinai,ENC-0098,Admitted,Paediatrics,Ahmed Al Busaidi,Ahmed Al Busaidi,General Ward Bed,2,"Dehydration secondary to gastroenteritis, IV fluids",Ward A Bed 02 - MHD,2026-10-12 13:00:00,Marley Health Demo
+Sultan Al Hashmi,ENC-0099,Admission Scheduled,Cardiology,Rajesh Menon,Rajesh Menon,General Ward Bed,2,Elective admission for BP control and cardiac work-up,,,Marley Health Demo
+Khadija Al Tobi,ENC-0100,Admission Scheduled,Diabetology,Fatma Al Rawahi,Fatma Al Rawahi,General Ward Bed,2,Elective admission for insulin initiation and education,,,Marley Health Demo
