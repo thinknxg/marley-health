@@ -2,3 +2,4 @@
 
 [post_model_sync]
 marley_demo_data.patches.load_demo_data
+marley_demo_data.patches.load_demo_data_retry
