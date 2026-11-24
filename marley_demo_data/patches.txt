@@ -5,3 +5,4 @@ marley_demo_data.patches.load_demo_data
 marley_demo_data.patches.load_demo_data_retry
 marley_demo_data.patches.purge_demo_data_v2
 marley_demo_data.patches.load_demo_data_v2
+marley_demo_data.patches.load_demo_data_v3
